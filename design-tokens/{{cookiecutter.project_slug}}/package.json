@@ -1,0 +1,22 @@
+{
+  "name": "{{ cookiecutter.slugname }}-design-tokens",
+  "description": "",
+  "//template_file_comment": "{{ cookiecutter.template_file_comment }}",
+  "version": "1.0.0",
+  "scripts": {
+    "theo": "theo",
+    "postcss": "postcss",
+    "transform-design-tokens": "./transform-design-tokens.sh",
+    "dev": "npm run build && http-server dist/ --port 8080 -c-1",
+    "prebuild": "npm run transform-design-tokens",
+    "build": "postcss src/v1/ --no-map --dir dist/v1/"
+  },
+  "devDependencies": {
+    "cssnano": "^5.0.10",
+    "http-server": "^14.0.0",
+    "postcss": "^8.3.11",
+    "postcss-cli": "^9.0.2",
+    "postcss-import": "^14.0.2",
+    "theo": "git+https://github.com/salesforce-ux/theo/#c9efd76171439f3d5c0b0fb858b755555de22e75"
+  }
+}
