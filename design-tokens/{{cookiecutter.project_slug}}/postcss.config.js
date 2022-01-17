@@ -1,5 +1,6 @@
 /*
 {{ cookiecutter.template_file_comment }}
+Version: {{ cookiecutter._version }}
 */
 const isProduction = process.env.NODE_ENV === 'production';
 

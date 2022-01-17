@@ -1,9 +1,11 @@
 {
   "slugname": "llama",
   "project_slug": "design-tokens",
-  "_version": "0.0.1-alpha.1",
-  "template_file_comment": "This file in {{ cookiecutter.project_slug }} was generated from cookiecutters/design-tokens version {{ cookiecutter._version }} for the {{ cookiecutter.slugname }} project. Any modifications needed to this file should be done on the originating file in cookiecutters/design-tokens project.",
-  "_read_only": "custom-properties-selector.cjs Dockerfile Makefile package.json package-lock.json postcss.config.js transform-design-tokens.sh",
+  "_version": "0.0.1",
+  "_repo": "https://github.com/jkenlooper/cookiecutters",
+  "_directory": "design-tokens",
+  "template_file_comment": "This file in the parent directory {{ cookiecutter.project_slug }} was generated from the {{ cookiecutter._directory }} directory in {{ cookiecutter._repo }} . Any modifications needed to this file should be done on that originating file.",
+  "_read_only": "custom-properties-selector.cjs Dockerfile Makefile package.json postcss.config.js transform-design-tokens.sh",
   "_copy_without_render": [
     "custom-properties-selector.cjs"
   ]

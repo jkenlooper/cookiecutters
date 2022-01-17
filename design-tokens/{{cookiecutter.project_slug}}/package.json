@@ -1,8 +1,7 @@
 {
   "name": "{{ cookiecutter.slugname }}-design-tokens",
-  "description": "",
   "//template_file_comment": "{{ cookiecutter.template_file_comment }}",
-  "version": "1.0.0",
+  "version": "{{ cookiecutter._version }}",
   "scripts": {
     "theo": "theo",
     "postcss": "postcss",

@@ -1,4 +1,5 @@
 # {{ cookiecutter.template_file_comment }}
+# Version: {{ cookiecutter._version }}
 
 SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c

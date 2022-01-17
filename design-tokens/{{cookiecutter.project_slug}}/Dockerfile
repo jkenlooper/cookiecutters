@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.3.0-labs
 
 # {{ cookiecutter.template_file_comment }}
-# TODO: Add maintainer information
+# Version: {{ cookiecutter._version }}
 
 FROM node:16-alpine as build
 

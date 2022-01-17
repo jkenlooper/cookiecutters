@@ -26,7 +26,7 @@ Color naming convention inspired by [Naming Conventions for colors - by Kevin Ma
 
 Use of colors loosely follow [Material Design guidelines](https://www.material.io/design/color/).
 
-Color aliases are defined in [color.yaml file](./color.yaml).
+Color aliases are defined in [color.yaml file](./src/color.yaml).
 
 ### Tools
 
@@ -101,13 +101,13 @@ docker run -it --rm \
 ## Updating Generated Files
 
 Run the cookiecutter command again to update any generated files with newer
-versions from the [cookiecutter design-tokens](https://github.com/jkenlooper/cookiecutters).
+versions from the [cookiecutter {{ cookiecutter._directory }}]({{ cookiecutter._repo }}).
 
 ```bash
 # From the top level of the project.
 cookiecutter --directory design-tokens \
   --overwrite-if-exists \
   --no-input \
-  https://github.com/jkenlooper/cookiecutters.git \
+  {{ cookiecutter._repo }}.git \
   slugname={{ cookiecutter.slugname }}
 ```

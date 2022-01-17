@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 
 # {{ cookiecutter.template_file_comment }}
+# Version: {{ cookiecutter._version }}
 
 set -eu -o pipefail
 
