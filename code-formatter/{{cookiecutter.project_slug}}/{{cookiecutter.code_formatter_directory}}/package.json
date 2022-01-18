@@ -1,0 +1,22 @@
+{
+  "name": "{{ cookiecutter.slugname }}-code-formatter",
+  "//template_file_comment": "{{ cookiecutter.template_file_comment }}",
+  "version": "{{ cookiecutter._version }}",
+  "private": true,
+  "scripts": {
+    "format": "./format.sh",
+    "prettier": "prettier",
+    "eslint": "eslint",
+    "stylelint": "stylelint"
+  },
+  "dependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.1",
+    "lint-staged": "^11.2.3",
+    "prettier": "2.3.0",
+    "stylelint": "^13.13.1",
+    "stylelint-config-prettier": "^8.0.1",
+    "stylelint-prettier": "^1.2.0"
+  }
+}

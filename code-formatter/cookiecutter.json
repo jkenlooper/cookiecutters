@@ -1,0 +1,11 @@
+{
+  "slugname": "llama",
+  "targets": "api client-side-public/src design-tokens/src divulger docs documents enforcer mockups queries root stream templates",
+  "project_slug": ".",
+  "code_formatter_directory": "code-formatter",
+  "_version": "0.0.1",
+  "_repo": "https://github.com/jkenlooper/cookiecutters",
+  "_directory": "code-formatter",
+  "template_file_comment": "This file in the parent directory {{ cookiecutter.project_slug }} was generated from the {{ cookiecutter._directory }} directory in {{ cookiecutter._repo }} . Any modifications needed to this file should be done on that originating file.",
+  "_read_only": "code-formatter.mk format.sh package.json package-lock.json"
+}

@@ -1,0 +1,22 @@
+# `{{ cookiecutter.slugname }}` Code Formatter
+
+The below command will run Prettier and Black on the target directories.
+
+```bash
+make format -f {{ cookiecutter.code_formatter_directory }}/code-formatter.mk
+```
+
+## Updating Generated Files
+
+Run the cookiecutter command again to update any generated files with newer
+versions from the [cookiecutter {{ cookiecutter._directory }}]({{ cookiecutter._repo }}).
+
+```bash
+# From the top level of the project.
+# The 'targets' are usually all top level directories.
+cookiecutter --directory {{ cookiecutter._directory }} \
+  --overwrite-if-exists \
+  {{ cookiecutter._repo }}.git \
+  slugname={{ cookiecutter.slugname }} \
+  targets="$(find . -depth -mindepth 1 -maxdepth 1 -type d \! -name '.*' \! -name '{{ cookiecutter.code_formatter_directory }}' | sed 's^\./^^g' | xargs)"
+```
