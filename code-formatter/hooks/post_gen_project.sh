@@ -6,11 +6,13 @@ set -o errexit
 
 # Skip over existing files and directories that may already exist from previous
 # cookiecutter runs.
-if [ ! -e .cookiecutter-config.yaml ]; then
-  mv .cookiecutter-config.yaml.cookiecutter_example .cookiecutter-config.yaml
-else
-  rm .cookiecutter-config.yaml.cookiecutter_example
-fi
+for file in .cookiecutter-config.yaml.cookiecutter_example .editorconfig.cookiecutter_example .flake8.cookiecutter_example .prettierrc.cookiecutter_example .stylelintrc.cookiecutter_example; do
+  if [ ! -e "${file%.cookiecutter_example}" ]; then
+    mv $file ${file%.cookiecutter_example}
+  else
+    rm $file
+  fi
+done
 for example in $(find {{ cookiecutter.code_formatter_directory }} -name '*.cookiecutter_example'); do
   new_item="${example%.cookiecutter_example}"
   if [ ! -e "$new_item" ]; then

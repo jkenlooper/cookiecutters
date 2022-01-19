@@ -1,9 +1,14 @@
 # `{{ cookiecutter.slugname }}` Code Formatter
 
-The below command will run Prettier and Black on the target directories.
+Reformats any code that is newer than files in
+`{{ cookiecutter.project_slug }}/{{ cookiecutter.code_formatter_directory }}/.last-modified/`
+
+The below command will run [Prettier](https://prettier.io/) and
+[Black](https://black.readthedocs.io/en/stable/) on the target directories.
 
 ```bash
-make format -f {{ cookiecutter.code_formatter_directory }}/code-formatter.mk
+# Run this makefile from the top level of the project:
+make format -f {{ cookiecutter.project_slug }}/{{ cookiecutter.code_formatter_directory }}/code-formatter.mk
 ```
 
 ## Updating Generated Files

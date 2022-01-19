@@ -1,3 +1,11 @@
+# Reformats any code that is newer than files in
+# {{ cookiecutter.project_slug }}/{{ cookiecutter.code_formatter_directory }}/.last-modified/*
+#
+# Run this makefile from the top level of the project:
+# make format -f {{ cookiecutter.project_slug }}/{{ cookiecutter.code_formatter_directory }}/code-formatter.mk
+
+# {{ cookiecutter.template_file_comment }}
+
 SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 .DEFAULT_GOAL := all

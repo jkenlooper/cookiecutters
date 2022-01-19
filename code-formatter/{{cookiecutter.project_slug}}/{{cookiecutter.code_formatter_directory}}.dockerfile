@@ -2,6 +2,8 @@ FROM node:16-buster
 
 # This {{ cookiecutter.code_formatter_directory }}.dockerfile should be at the top-level of the project.
 
+# {{ cookiecutter.template_file_comment }}
+
 RUN apt-get --yes update && apt-get --yes upgrade
 RUN apt-get --yes install python3 \
   python3-dev \
