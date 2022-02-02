@@ -8,7 +8,9 @@ The below command will run [Prettier](https://prettier.io/) and
 
 ```bash
 # Run this makefile from the top level of the project:
+mv .dockerignore .dockerignore.bak
 make format -f {{ cookiecutter.project_slug }}/{{ cookiecutter.code_formatter_directory }}/code-formatter.mk
+mv .dockerignore.bak .dockerignore
 ```
 
 ## Updating Generated Files

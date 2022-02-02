@@ -4,7 +4,7 @@
   "project_slug": ".",
   "code_formatter_directory": "code-formatter",
   "prettier_file_type_extensions": ".js .jsx .mjs .ts .tsx .css .less .scss .json .graphql .gql .markdown .md .mdown .mkd .mkdn .mdx .vue .svelte .yml .yaml .html .php .rb .ruby .xml",
-  "_version": "0.0.2-alpha.1",
+  "_version": "0.0.2-beta.1",
   "_repo": "https://github.com/jkenlooper/cookiecutters",
   "_directory": "code-formatter",
   "template_file_comment": "This file was generated from the {{ cookiecutter._directory }} directory in {{ cookiecutter._repo }} . Any modifications needed to this file should be done on that originating file.",

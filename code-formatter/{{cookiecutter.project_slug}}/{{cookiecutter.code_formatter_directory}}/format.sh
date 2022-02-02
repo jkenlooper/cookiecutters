@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
 
+# TODO: ways to make this less crazy when there are multiple targets?
+# TODO: include an exclude list of common file names to skip. Like
+# package-lock.json, node_modules/
+
 # {{ cookiecutter.template_file_comment }}
 
 {%- for target in cookiecutter.targets.split(' ') %}
