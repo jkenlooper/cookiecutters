@@ -1,0 +1,15 @@
+:root {
+  --sm-viewport-max: 599px;
+  --md-viewport-min: 600px;
+  --md-viewport-max: 959px;
+  --lg-viewport-min: 960px;
+}
+
+/* spacing */
+:root {
+  /*
+  --spacing-sm: 0.6em;
+  --spacing-md: 1em;
+  --spacing-lg: 3em;
+  */
+}

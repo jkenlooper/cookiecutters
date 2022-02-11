@@ -1,0 +1,7 @@
+# {{ cookiecutter.template_file_comment }}
+# Version: {{ cookiecutter._version }}
+
+*
+!/src
+!/vendor
+!/manifest.json

@@ -1,0 +1,50 @@
+{
+  "vendors": [
+    {
+      "archive": "https://github.com/csstools/normalize.css/archive/refs/tags/12.0.0.tar.gz",
+      "checksum": "bc32370efa8b2a029213930e91523ce5",
+      "files": [
+        {
+          "src": "normalize.css",
+          "dst": "vendor/normalize.css/normalize.css"
+        },
+        {
+          "src": "LICENSE.md",
+          "dst": "vendor/normalize.css/LICENSE.md"
+        }
+      ]
+    },
+    {
+      "archive": "https://github.com/h5bp/main.css/archive/refs/tags/v3.0.0.tar.gz",
+      "checksum": "14ff32336057cd498f4b4531444912c1",
+      "files": [
+        {
+          "src": "dist/_print.css",
+          "dst": "vendor/main.css/_print.css"
+        },
+        {
+          "src": "dist/_helpers.css",
+          "dst": "vendor/main.css/_helpers.css"
+        },
+        {
+          "src": "LICENSE.txt",
+          "dst": "vendor/main.css/LICENSE.txt"
+        }
+      ]
+    },
+    {
+      "archive": "https://github.com/suitcss/utils-text/archive/refs/tags/1.0.0.tar.gz",
+      "checksum": "bf8278f0162e9a6a055e8f7cf80c8304",
+      "files": [
+        {
+          "src": "lib/text.css",
+          "dst": "vendor/suitcss-utils-text/text.css"
+        },
+        {
+          "src": "LICENSE.md",
+          "dst": "vendor/suitcss-utils-text/LICENSE.md"
+        }
+      ]
+    }
+  ]
+}
