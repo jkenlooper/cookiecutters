@@ -1,7 +1,4 @@
-# `{{ cookiecutter.slugname }}` Client Side Public
-
-Contains the source files that are used for the website's client side public
-code.  These are typically compiled Javascript and CSS files.
+# `{{ cookiecutter.slugname }}` {{ cookiecutter.project_slug }}
 
 Notice that this is not using `npm` or `node` for peace of mind reasons. No
 package.json or package-lock.json is being used here. An alternative (and

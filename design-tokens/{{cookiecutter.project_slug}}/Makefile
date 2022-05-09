@@ -27,6 +27,7 @@ objects := package-lock.json .dist
 all: $(objects)
 
 package-lock.json: package.json Dockerfile
+	$(DOCKER) image rm $(slugname)-design-tokens-build || printf ""
 	DOCKER_BUILDKIT=1 $(DOCKER) build --progress=plain -f $(project_dir)Dockerfile \
 		--target build \
 		-t $(slugname)-design-tokens-build \
@@ -43,6 +44,7 @@ package-lock.json: package.json Dockerfile
 
 .dist: package-lock.json postcss.config.js custom-properties-selector.cjs $(shell find src/ -type f)
 	rm -rf dist
+	$(DOCKER) image rm $(slugname)-design-tokens-build || printf ""
 	DOCKER_BUILDKIT=1 $(DOCKER) build --progress=plain -f $(project_dir)Dockerfile \
 		--target build \
 		-t $(slugname)-design-tokens-build \

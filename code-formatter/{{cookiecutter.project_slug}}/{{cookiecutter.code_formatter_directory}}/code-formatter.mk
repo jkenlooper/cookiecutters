@@ -31,6 +31,7 @@ objects := $(project_dir)package-lock.json format
 all: $(objects)
 
 $(project_dir)package-lock.json: $(project_dir)package.json {{ cookiecutter.code_formatter_directory }}.dockerfile
+	$(DOCKER) image rm {{ cookiecutter.slugname }}-{{ cookiecutter._directory }} || printf ""
 	$(DOCKER) build -f {{ cookiecutter.code_formatter_directory }}.dockerfile \
 		-t {{ cookiecutter.slugname }}-{{ cookiecutter._directory }} \
 		./
@@ -46,6 +47,7 @@ $(project_dir)package-lock.json: $(project_dir)package.json {{ cookiecutter.code
 
 .PHONY: format
 format: $(project_dir)package-lock.json
+	$(DOCKER) image rm {{ cookiecutter.slugname }}-{{ cookiecutter._directory }} || printf ""
 	$(DOCKER) build -f {{ cookiecutter.code_formatter_directory }}.dockerfile \
 		-t {{ cookiecutter.slugname }}-{{ cookiecutter._directory }} \
 		./

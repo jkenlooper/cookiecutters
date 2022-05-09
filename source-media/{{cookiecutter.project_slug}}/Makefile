@@ -23,6 +23,7 @@ all: .media
 
 
 .media: $(shell find ./src -type f)
+	$(DOCKER) image rm $(slugname)-source-media || printf ""
 	DOCKER_BUILDKIT=1 $(DOCKER) build -f $(project_dir)Dockerfile \
 		--target build \
 		-t $(slugname)-source-media \

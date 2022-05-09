@@ -17,6 +17,7 @@ cleanup () {
 }
 trap cleanup exit
 
+docker image rm "$slugname" || printf ""
 DOCKER_BUILDKIT=1 docker build \
   --progress=plain \
   --target build \

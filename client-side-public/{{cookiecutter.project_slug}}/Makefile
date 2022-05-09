@@ -30,6 +30,7 @@ all: $(objects)
 	chmod -R u+w vendor/
 	rm -rf vendor
 	mkdir -p vendor
+	$(DOCKER) image rm "$(slugname)-{{ cookiecutter.project_slug }}" || printf ""
 	DOCKER_BUILDKIT=1 $(DOCKER) build -f $(project_dir)Dockerfile \
 		--target build \
 		-t $(slugname)-{{ cookiecutter.project_slug }} \
@@ -46,6 +47,7 @@ all: $(objects)
 	touch $@
 
 .dist: .vendor $(shell find src/ -type f)
+	$(DOCKER) image rm "$(slugname)-{{ cookiecutter.project_slug }}" || printf ""
 	DOCKER_BUILDKIT=1 $(DOCKER) build -f $(project_dir)Dockerfile \
 		--target build \
 		-t $(slugname)-{{ cookiecutter.project_slug }} \
