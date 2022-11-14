@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.3.0-labs
+# syntax=docker/dockerfile:1.4.3
 
 # {{ cookiecutter.template_file_comment }}
 # Version: {{ cookiecutter._version }}
@@ -86,6 +86,7 @@ RUN <<FILEWATCH_SUPPORT
 
 cat <<'DEV_SH' > dev.sh
 #!/usr/bin/env sh
+set -o errexit
 rm -rf dist
 echo "Serving main bundle at port {{ cookiecutter.project_port }} and watching for changes."
 /go/src/esbuild/esbuild --bundle --external:/media/* --sourcemap --outdir=dist --serve={{ cookiecutter.project_port }} src/main.js
@@ -105,8 +106,6 @@ RUN <<BUILD
 # be used to troubleshoot when the --target is build.
 /go/src/esbuild/esbuild --bundle --external:/media/* --minify --sourcemap --outdir=dist src/main.js || echo "ERROR: build failed"
 BUILD
-
-EXPOSE {{ cookiecutter.project_port }}
 
 CMD ["./dev.sh"]
 

@@ -3,5 +3,6 @@
 
 *
 !/src
+!/local-scripts/*
 !/vendor
 !/manifest.json
