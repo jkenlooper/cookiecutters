@@ -1,4 +1,5 @@
 FROM node:16-buster
+# TODO switch to node:16-alpine3.16
 
 # This {{ cookiecutter.code_formatter_directory }}.dockerfile should be at the top-level of the project.
 
@@ -29,7 +30,5 @@ COPY .flake8 ./
 COPY .prettierrc ./
 COPY .stylelintrc ./
 COPY {{ cookiecutter.code_formatter_directory }}/format.sh ./
-
-VOLUME /code/.last-modified
 
 CMD ["npm", "run"]
