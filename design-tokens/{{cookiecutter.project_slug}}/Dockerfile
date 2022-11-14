@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.3.0-labs
+# syntax=docker/dockerfile:1.4.3
 
 # {{ cookiecutter.template_file_comment }}
 # Version: {{ cookiecutter._version }}
@@ -22,6 +22,7 @@ apk update
 apk add --no-cache \
   git
 # Use the unprivileged user when using npm install
+npm install -g npm@9.1.1
 su dev -c 'npm ci --ignore-scripts'
 # Cleanup
 apk --purge del \
@@ -61,8 +62,6 @@ RUN <<BUILD
 npm run build || echo "Failed build"
 BUILD
 
-EXPOSE 8080
-
 CMD ["./dev.sh"]
 
 ### Serve
@@ -72,4 +71,4 @@ FROM lipanski/docker-static-website:1.0.0@sha256:ea8516e6b2928c3c1b1c6737f7e32e0
 COPY --from=build /build/dist /home/static
 
 # Need a Cache-Control:max-age=0 header (thttpd option '-M 0') on all responses.
-CMD ["/thttpd", "-D", "-h", "0.0.0.0", "-p", "8080", "-d", "/home/static", "-u", "static", "-l", "-", "-M", "0"]
+CMD ["/thttpd", "-D", "-h", "0.0.0.0", "-p", "{{ cookiecutter.project_port }}", "-d", "/home/static", "-u", "static", "-l", "-", "-M", "0"]

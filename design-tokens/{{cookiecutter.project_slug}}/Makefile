@@ -14,7 +14,7 @@ slugname := {{ cookiecutter.slugname }}
 
 DOCKER := docker
 
-project_files := package-lock.json postcss.config.js custom-properties-selector.cjs $(shell find src/ -type f)
+project_files := package.json Dockerfile package-lock.json postcss.config.js custom-properties-selector.cjs $(shell find src/ -type f)
 
 # The hash string could be used for cache-busting.
 HASH := $(shell cat $(project_files) | md5sum - | cut -d' ' -f1)
@@ -39,36 +39,16 @@ help: ## Show this help
 .PHONY: dist
 dist: .dist ## Create dist/* files for distribution
 
-package-lock.json: package.json Dockerfile
-	$(DOCKER) image rm $(slugname)-design-tokens-build || printf ""
-	DOCKER_BUILDKIT=1 $(DOCKER) build --progress=plain -f $(project_dir)Dockerfile \
-		--target build \
-		-t $(slugname)-design-tokens-build \
-		$(project_dir)
-	$(DOCKER) run \
-		--name $(slugname)-design-tokens-build \
-		$(slugname)-design-tokens-build \
-		npm install --ignore-scripts
-	$(DOCKER) cp \
-		$(slugname)-design-tokens-build:/build/package-lock.json \
-		$@
-	$(DOCKER) rm \
-		$(slugname)-design-tokens-build
+.dist: local-scripts/local-build.sh $(project_files)
+	./$< -s $(slugname) -a $(app_name) -p $(project_dir)
+	@touch $@
 
-.dist: $(project_files)
-	rm -rf dist
-	$(DOCKER) image rm $(slugname)-design-tokens-build || printf ""
-	DOCKER_BUILDKIT=1 $(DOCKER) build --progress=plain -f $(project_dir)Dockerfile \
-		--target build \
-		-t $(slugname)-design-tokens-build \
-		$(project_dir)
-	$(DOCKER) run \
-		--name $(slugname)-design-tokens-build \
-		$(slugname)-design-tokens-build \
-		ls -alR /build/dist/
-	$(DOCKER) cp \
-		$(slugname)-design-tokens-build:/build/dist \
-		$(project_dir)
-	$(DOCKER) rm \
-		$(slugname)-design-tokens-build
-	touch $(@)
+.PHONY: start
+start: ## Start local development
+	$(project_dir)/local-scripts/local-start.sh -s $(slugname) -a $(app_name) -p $(project_dir)
+
+.PHONY: clean
+clean: ## Remove files that were created
+	printf '%s\0' $(objects) | xargs -0 rm -r -f
+	find dist/ -depth -mindepth 1 -type f -not -name '.gitkeep' -delete
+	find dist/ -depth -mindepth 1 -type d -empty -delete
