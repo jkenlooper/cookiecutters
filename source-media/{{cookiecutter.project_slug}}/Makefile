@@ -1,14 +1,18 @@
-SHELL := bash
-.SHELLFLAGS := -eu -o pipefail -c
+SHELL := sh
+.SHELLFLAGS := -o errexit -c
 .DEFAULT_GOAL := all
 .DELETE_ON_ERROR:
 .SUFFIXES:
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_dir := $(dir $(mkfile_path))
+app_name := $(notdir $(patsubst %/,%,$(project_dir)))
 slugname := {{ cookiecutter.slugname }}
 
-DOCKER := docker
+project_files := $(shell find . -type f -not -path './.git/*' -not -path './media/*' -not -path './.media' | sort)
+
+# The hash string could be used for cache-busting.
+HASH := $(shell cat $(project_files) | md5sum - | cut -d' ' -f1)
 
 # For debugging what is set in variables
 inspect.%:
@@ -18,28 +22,29 @@ inspect.%:
 # Use $* to get the stem
 FORCE:
 
+objects := .media
+
 .PHONY: all
-all: .media
+all: $(objects) ## Default is to make all media files
 
+.PHONY: help
+help: ## Show this help
+	@egrep -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-.media: $(shell find ./src -type f)
-	$(DOCKER) image rm $(slugname)-source-media || printf ""
-	DOCKER_BUILDKIT=1 $(DOCKER) build -f $(project_dir)Dockerfile \
-		--target build \
-		-t $(slugname)-source-media \
-		$(project_dir)
-	$(DOCKER) run \
-		--name $(slugname)-source-media \
-		$(slugname)-source-media \
-		sh ./make.sh
-	$(DOCKER) cp \
-		$(slugname)-source-media:/build/media \
-		$(project_dir)
-	$(DOCKER) rm \
-		$(slugname)-source-media
-	touch $@
+.PHONY: media
+media: .media ## Create media/* files
 
+# Run the local-scripts/build.sh script to create the media/* files.
+.media: local-scripts/local-build.sh $(project_files)
+	./$< -s $(slugname) -a $(app_name) -p $(project_dir)
+	@touch $@
+
+.PHONY: start
+start: ## Start local development
+	$(project_dir)/local-scripts/local-start.sh -s $(slugname) -a $(app_name) -p $(project_dir)
 
 .PHONY: clean
-clean:
-	rm .media
+clean: ## Remove files that were created
+	printf '%s\0' $(objects) | xargs -0 rm -r -f
+	find media/ -depth -mindepth 1 -type f -not -name '.gitkeep' -delete
+	find media/ -depth -mindepth 1 -type d -empty -delete
