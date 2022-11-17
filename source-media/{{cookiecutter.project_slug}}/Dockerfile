@@ -63,7 +63,7 @@ RUN ./build.sh
 # Need to bind to all addresses (0.0.0.0) as the default when within the site's
 # network.
 ENV BIND=0.0.0.0
-ENV PORT={{ cookiecutter.project_port }}
+ENV SOURCE_MEDIA_PORT={{ cookiecutter.project_port }}
 
 # Default command is to run the dev.sh script to watch files and build and serve
 # them.
@@ -76,4 +76,4 @@ FROM lipanski/docker-static-website:1.0.0@sha256:ea8516e6b2928c3c1b1c6737f7e32e0
 COPY --from=build /build/media /home/static
 
 # Need a Cache-Control:max-age=0 header (thttpd option '-M 0') on all responses.
-CMD ["/thttpd", "-D", "-h", "0.0.0.0", "-p", "{{ cookiecutter.project_port }}", "-d", "/home/static", "-u", "static", "-l", "-", "-M", "0"]
+CMD ["/thttpd", "-D", "-h", "$BIND", "-p", "$SOURCE_MEDIA_PORT", "-d", "/home/static", "-u", "static", "-l", "-", "-M", "0"]

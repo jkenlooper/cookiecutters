@@ -22,7 +22,7 @@ Environment Variables:
   BUILD_SRC_DIR=/build/src
   BUILD_MEDIA_DIR=/build/media
   BIND=0.0.0.0
-  PORT=8080
+  SOURCE_MEDIA_PORT=8080
 
 
 HEREUSAGE
@@ -59,7 +59,7 @@ check_env_vars() {
 
   test -n "$BUILD_MEDIA_DIR" || (echo "ERROR $script_name: No BUILD_MEDIA_DIR environment variable defined" >&2 && usage && exit "$invalid_errcode")
   test -n "$BIND" || (echo "ERROR $script_name: No BIND environment variable defined" >&2 && usage && exit "$invalid_errcode")
-  test -n "$PORT" || (echo "ERROR $script_name: No PORT environment variable defined" >&2 && usage && exit "$invalid_errcode")
+  test -n "$SOURCE_MEDIA_PORT" || (echo "ERROR $script_name: No SOURCE_MEDIA_PORT environment variable defined" >&2 && usage && exit "$invalid_errcode")
 }
 
 check_for_required_commands
@@ -71,7 +71,7 @@ tree -a "$BUILD_MEDIA_DIR"
 if [ -n "$has_thttpd" ]; then
   # Need a Cache-Control:max-age=0 header (thttpd option '-M 0') on all responses.
   set -x
-  thttpd -D -h "$BIND" -p "$PORT" -d "$BUILD_MEDIA_DIR" -u dev -l - -M 1
+  thttpd -D -h "$BIND" -p "$SOURCE_MEDIA_PORT" -d "$BUILD_MEDIA_DIR" -u dev -l - -M 1
 elif [ -n "$has_python3" ]; then
   printf "\n%s\n" "
   # Warning
@@ -80,7 +80,7 @@ elif [ -n "$has_python3" ]; then
   # security checks.
   "
   set -x
-  python3 -m http.server --directory "$BUILD_MEDIA_DIR" --bind "$BIND" "$PORT"
+  python3 -m http.server --directory "$BUILD_MEDIA_DIR" --bind "$BIND" "$SOURCE_MEDIA_PORT"
 else
   echo "ERROR $script_name: Unhandled condition." >&2
   exit 8
