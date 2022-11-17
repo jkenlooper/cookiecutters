@@ -82,7 +82,7 @@ build_and_run() {
     --user root \
     --network=host \
     --env BIND="$bind" \
-    --env PORT="$port" \
+    --env CLIENT_SIDE_PUBLIC_PORT="$port" \
     --mount "type=bind,src=$project_dir/src,dst=/build/src,readonly" \
     --name "$container_name" \
     "$image_name" "$@"

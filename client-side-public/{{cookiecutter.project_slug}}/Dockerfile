@@ -81,6 +81,8 @@ jq -c '.vendors[]' manifest.json \
 chown -R dev:dev vendor/
 BUILD_VENDOR
 
+ENV CLIENT_SIDE_PUBLIC_PORT={{ cookiecutter.project_port }}
+ENV BIND=0.0.0.0
 
 RUN <<FILEWATCH_SUPPORT
 
@@ -88,8 +90,8 @@ cat <<'DEV_SH' > dev.sh
 #!/usr/bin/env sh
 set -o errexit
 rm -rf dist
-echo "Serving main bundle at port {{ cookiecutter.project_port }} and watching for changes."
-/go/src/esbuild/esbuild --bundle --external:/media/* --sourcemap --outdir=dist --serve={{ cookiecutter.project_port }} src/main.js
+echo "Serving main bundle at port $CLIENT_SIDE_PUBLIC_PORT and watching for changes."
+/go/src/esbuild/esbuild --bundle --external:/media/* --sourcemap --outdir=dist --serve="$BIND:$CLIENT_SIDE_PUBLIC_PORT" src/main.js
 echo "Finished."
 DEV_SH
 
@@ -116,4 +118,4 @@ FROM lipanski/docker-static-website:1.0.0@sha256:ea8516e6b2928c3c1b1c6737f7e32e0
 COPY --from=build /build/dist /home/static
 
 # Need a Cache-Control:max-age=0 header (thttpd option '-M 0') on all responses.
-CMD ["/thttpd", "-D", "-h", "0.0.0.0", "-p", "{{ cookiecutter.project_port }}", "-d", "/home/static", "-u", "static", "-l", "-", "-M", "0"]
+CMD ["/thttpd", "-D", "-h", "$BIND", "-p", "$CLIENT_SIDE_PUBLIC_PORT", "-d", "/home/static", "-u", "static", "-l", "-", "-M", "0"]
