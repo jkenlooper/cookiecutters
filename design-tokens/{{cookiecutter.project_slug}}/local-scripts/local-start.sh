@@ -81,8 +81,9 @@ build_and_run() {
   docker run -i --tty \
     --user root \
     --network=host \
+    --env NODE_ENV="development" \
     --env BIND="$bind" \
-    --env PORT="$port" \
+    --env DESIGN_TOKENS_PORT="$port" \
     --mount "type=bind,src=$project_dir/src,dst=/build/src,readonly" \
     --name "$container_name" \
     "$image_name" "$@"

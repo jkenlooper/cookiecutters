@@ -29,6 +29,9 @@ apk --purge del \
   git
 INSTALL
 
+ENV DESIGN_TOKENS_PORT={{ cookiecutter.project_port }}
+ENV BIND=0.0.0.0
+
 RUN <<FILEWATCH_SUPPORT
 apk update
 apk add --no-cache \
@@ -71,4 +74,4 @@ FROM lipanski/docker-static-website:1.0.0@sha256:ea8516e6b2928c3c1b1c6737f7e32e0
 COPY --from=build /build/dist /home/static
 
 # Need a Cache-Control:max-age=0 header (thttpd option '-M 0') on all responses.
-CMD ["/thttpd", "-D", "-h", "0.0.0.0", "-p", "{{ cookiecutter.project_port }}", "-d", "/home/static", "-u", "static", "-l", "-", "-M", "0"]
+CMD ["/thttpd", "-D", "-h", "0.0.0.0", "-p", "$DESIGN_TOKENS_PORT", "-d", "/home/static", "-u", "static", "-l", "-", "-M", "0"]

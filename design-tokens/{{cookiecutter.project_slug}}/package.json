@@ -6,7 +6,7 @@
     "theo": "theo",
     "postcss": "postcss",
     "transform-design-tokens": "./transform-design-tokens.sh",
-    "dev": "npm run build && http-server dist/ --port {{ cookiecutter.project_port }} -c-1",
+    "dev": "npm run build && http-server dist/ --port $DESIGN_TOKENS_PORT -c-1",
     "prebuild": "npm run transform-design-tokens",
     "build": "postcss src/v1/ --no-map --dir dist/v1/"
   },
