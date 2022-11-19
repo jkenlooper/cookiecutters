@@ -60,8 +60,6 @@ RUN /build/local-scripts/install.sh
 COPY --chown=dev:dev *.mk /build/
 COPY --chown=dev:dev src /build/src
 
-USER dev
-
 # Build the dist files inside the container
 RUN /build/local-scripts/build.sh
 

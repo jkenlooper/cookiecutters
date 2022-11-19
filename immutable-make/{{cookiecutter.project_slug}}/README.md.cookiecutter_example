@@ -14,5 +14,8 @@ cookiecutter --directory {{ cookiecutter._directory }} \
   --overwrite-if-exists \
   --no-input \
   {{ cookiecutter._repo }}.git \
-  slugname={{ cookiecutter.slugname }}
+  slugname={{ cookiecutter.slugname }} \
+  project_slug={{ cookiecutter.project_slug }} \
+  project_slug_upper={{ cookiecutter.project_slug_upper }} \
+  project_port={{ cookiecutter.project_port }}
 ```

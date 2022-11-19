@@ -80,7 +80,9 @@ elif [ -n "$has_python3" ]; then
   # security checks.
   "
   set -x
-  python3 -m http.server --directory "/build/dist" --bind "$BIND" "${{ cookiecutter.project_slug_upper }}_PORT"
+  su dev -c "
+    python3 -m http.server --directory \"/build/dist\" --bind \"$BIND\" \"${{ cookiecutter.project_slug_upper }}_PORT\"
+  "
 else
   echo "ERROR $script_name: Unhandled condition." >&2
   exit 8

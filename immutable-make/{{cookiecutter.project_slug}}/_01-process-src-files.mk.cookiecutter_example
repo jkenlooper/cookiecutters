@@ -7,7 +7,10 @@ objects = $(patsubst src/%, dist/%, $(shell find src/ -depth -mindepth 1 -maxdep
 all : $(objects)
 
 clean :
-	echo $(objects) | xargs rm -f
+	printf '%s\0' $(objects) | xargs -0 rm -r -f
+	find dist/ -depth -mindepth 1 -type f -not -name '.gitkeep' -delete
+	find dist/ -depth -mindepth 1 -type d -empty -delete
 
 dist/% : src/%
 	cp $< $@
+	touch $@

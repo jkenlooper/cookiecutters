@@ -78,6 +78,6 @@ docker build \
   "${project_dir}"
 docker run \
   --name "$container_name" \
-  "$image_name" ls /build/dist
+  "$image_name" tree /build/dist
 docker cp "$container_name":/build/dist "$project_dir/"
 stop_and_rm_containers_silently
