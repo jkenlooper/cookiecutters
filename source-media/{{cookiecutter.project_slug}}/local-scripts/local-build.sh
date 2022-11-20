@@ -11,7 +11,7 @@ usage() {
   cat <<HERE
 
 Local build script for development of immutable resources. Starts a container
-and copies built files to the media directory.
+and copies built files to the dist directory.
 
 Usage:
   $script_name -h
@@ -78,5 +78,5 @@ docker run \
   --name "$container_name" \
   "$image_name" ls /build/media
 
-docker cp "$container_name":/build/media "$project_dir/"
+docker cp "$container_name":/build/media "$project_dir/dist"
 stop_and_rm_containers_silently

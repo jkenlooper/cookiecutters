@@ -9,7 +9,7 @@ project_dir := $(dir $(mkfile_path))
 app_name := $(notdir $(patsubst %/,%,$(project_dir)))
 slugname := {{ cookiecutter.slugname }}
 
-project_files := $(shell find . -type f -not -path './.git/*' -not -path './media/*' -not -path './.media' | sort)
+project_files := $(shell find . -type f -not -path './.git/*' -not -path './dist/*' -not -path './.dist' | sort)
 
 # The hash string could be used for cache-busting.
 HASH := $(shell cat $(project_files) | md5sum - | cut -d' ' -f1)
@@ -22,20 +22,20 @@ inspect.%:
 # Use $* to get the stem
 FORCE:
 
-objects := .media
+objects := .dist
 
 .PHONY: all
-all: $(objects) ## Default is to make all media files
+all: $(objects) ## Default is to make all dist files
 
 .PHONY: help
 help: ## Show this help
 	@egrep -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: media
-media: .media ## Create media/* files
+.PHONY: dist
+dist: .dist ## Create dist/* files
 
-# Run the local-scripts/build.sh script to create the media/* files.
-.media: local-scripts/local-build.sh $(project_files)
+# Run the local-scripts/build.sh script to create the dist/* files.
+.dist: local-scripts/local-build.sh $(project_files)
 	./$< -s $(slugname) -a $(app_name) -p $(project_dir)
 	@touch $@
 
@@ -46,5 +46,5 @@ start: ## Start local development
 .PHONY: clean
 clean: ## Remove files that were created
 	printf '%s\0' $(objects) | xargs -0 rm -r -f
-	find media/ -depth -mindepth 1 -type f -not -name '.gitkeep' -delete
-	find media/ -depth -mindepth 1 -type d -empty -delete
+	find dist/ -depth -mindepth 1 -type f -not -name '.gitkeep' -delete
+	find dist/ -depth -mindepth 1 -type d -empty -delete

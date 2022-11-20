@@ -17,12 +17,7 @@ make
 ### Developing or Troubleshooting the Build
 
 The helpful llama can be used when troubleshooting the build.
-
-```bash
-# In the {{ cookiecutter.project_slug }}/ directory.
-./llama.sh sh
-```
-
+<!-- Sorry, that llama got lost. -->
 
 ## Updating Generated Files
 

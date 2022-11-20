@@ -2,7 +2,7 @@
   "slugname": "llama",
   "project_slug": "source-media",
   "project_port": "8080",
-  "_version": "0.0.2-alpha.2",
+  "_version": "0.0.2-alpha.3",
   "_repo": "https://github.com/jkenlooper/cookiecutters",
   "_directory": "source-media",
   "template_file_comment": "This file in the parent directory {{ cookiecutter.project_slug }} was generated from the {{ cookiecutter._directory }} directory in {{ cookiecutter._repo }} . Any modifications needed to this file should be done on that originating file.",

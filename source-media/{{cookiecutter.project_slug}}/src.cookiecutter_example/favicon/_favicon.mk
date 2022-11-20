@@ -1,4 +1,4 @@
-# Build a media/favicon.ico from multiple source files.
+# Build a dist/favicon.ico from multiple source files.
 
 .PHONY : all clean
 
@@ -19,5 +19,5 @@ clean :
 	mkdir -p $$(dirname $@)
 	convert +antialias $< -background white -resize 64x64 $@;
 
-media/favicon.ico : src/favicon/favicon-16x16.png src/favicon/favicon-32x32.png $(intermediate_files)
+dist/favicon.ico : src/favicon/favicon-16x16.png src/favicon/favicon-32x32.png $(intermediate_files)
 	convert $^ $@;
