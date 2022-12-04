@@ -1,0 +1,131 @@
+server {
+  listen ${SERVER_PORT};
+
+  # Use special wildcard server_name by prefixing with '.' so
+  # [chillbox-hostname].${SERVER_NAME} will also match.
+  # https://nginx.org/en/docs/http/server_names.html
+  server_name .${SERVER_NAME};
+
+  root /srv/${SLUGNAME}/root;
+  access_log /var/log/nginx/${SLUGNAME}/access.log;
+  error_log /var/log/nginx/${SLUGNAME}/error.log;
+
+  # Limit all server wide to this small amount. Override on a location level.
+  client_max_body_size 20k;
+
+  # Ignore query parameters for cache.
+  proxy_cache_key $scheme$proxy_host$uri;
+
+  location ${CHILL_STATIC_PATH} {
+    limit_except GET {
+      deny all;
+    }
+
+    add_header Cache-Control "public,no-cache";
+
+    root /usr/local/src/${SLUGNAME}/chill/frozen;
+    # The last try_files parameter is either '=404' or '@chill-static'.
+    try_files $uri $uri/index.html ${CHILL_STATIC_TRY_FILES_LAST_PARAM};
+
+  }
+  location @chill-static {
+    add_header Cache-Control "public,no-cache";
+    # Note that when the location is a named location (@name); the request URI
+    # is not stripped off before passing it to the proxy. The URL used here when
+    # in a named location (@name) therefore can't end with a slash.
+    proxy_pass ${CHILL_STATIC_SCHEME}://${CHILL_STATIC_HOST}:$CHILL_STATIC_PORT;
+  }
+
+  location ${DESIGN_TOKENS_PATH} {
+    limit_except GET {
+      deny all;
+    }
+    proxy_cache var_cache_nginx;
+    proxy_cache_valid 1y;
+    add_header X-Proxy-Cache $upstream_cache_status;
+    # Use a URL that ends with a slash because that is where the resources
+    # matching the path in the location will be located.
+    proxy_pass ${DESIGN_TOKENS_URL};
+  }
+
+  location ${CLIENT_SIDE_PUBLIC_PATH} {
+    limit_except GET {
+      deny all;
+    }
+    proxy_cache var_cache_nginx;
+    proxy_cache_valid 1y;
+    add_header X-Proxy-Cache $upstream_cache_status;
+    # Use a URL that ends with a slash because that is where the resources
+    # matching the path in the location will be located.
+    proxy_pass ${CLIENT_SIDE_PUBLIC_URL};
+  }
+
+  location ${SOURCE_MEDIA_PATH} {
+    limit_except GET {
+      deny all;
+    }
+    proxy_cache var_cache_nginx;
+    proxy_cache_valid 1y;
+    add_header X-Proxy-Cache $upstream_cache_status;
+    # Use a URL that ends with a slash because that is where the resources
+    # matching the path in the location will be located.
+    proxy_pass ${SOURCE_MEDIA_URL};
+  }
+  # favicon won't have a version to cache-bust
+  location = /favicon.ico {
+    limit_except GET {
+      deny all;
+    }
+    proxy_cache var_cache_nginx;
+    proxy_cache_valid 1y;
+    add_header X-Proxy-Cache $upstream_cache_status;
+    proxy_pass ${SOURCE_MEDIA_URL}favicon.ico;
+  }
+
+  location ${CODE_SNIPPETS_PATH} {
+    limit_except GET {
+      deny all;
+    }
+    proxy_cache var_cache_nginx;
+    proxy_cache_valid 1y;
+    add_header X-Proxy-Cache $upstream_cache_status;
+    # Use a URL that ends with a slash because that is where the resources
+    # matching the path in the location will be located.
+    proxy_pass ${CODE_SNIPPETS_URL};
+  }
+
+  # For SSL cert validation
+  location /.well-known/ {
+    limit_except GET {
+      deny all;
+    }
+    root /srv/${SLUGNAME}/;
+  }
+
+  location ~* ^/(robots|humans).txt$ {
+    limit_except GET {
+      deny all;
+    }
+    add_header Cache-Control "public,max-age=86400";
+    try_files $uri =404;
+  }
+
+  error_page 500 501 504 505 506 507 /error.html;
+  location = /error.html {
+    internal;
+  }
+
+  error_page 502 503 /maintenance.html;
+  location = /maintenance.html {
+    internal;
+  }
+
+  error_page 404 /notfound.html;
+  location = /notfound.html {
+    internal;
+  }
+  error_page 403 /forbidden.html;
+  location = /forbidden.html {
+    internal;
+  }
+}

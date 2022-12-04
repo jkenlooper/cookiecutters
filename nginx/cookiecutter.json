@@ -1,0 +1,12 @@
+{
+  "slugname": "llama",
+  "project_slug": "nginx",
+  "_version": "0.0.1-alpha.1",
+  "_repo": "https://github.com/jkenlooper/cookiecutters",
+  "_directory": "nginx",
+  "template_file_comment": "This file in the parent directory {{ cookiecutter.project_slug }} was generated from the {{ cookiecutter._directory }} directory in {{ cookiecutter._repo }} . Any modifications needed to this file should be done on that originating file.",
+  "_read_only": ".dockerignore default.nginx.conf nginx.conf",
+  "_copy_without_render": [
+  ]
+}
+

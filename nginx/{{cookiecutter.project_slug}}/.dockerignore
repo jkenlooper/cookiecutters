@@ -1,0 +1,5 @@
+*
+!/default.nginx.conf
+!/nginx.conf
+!/root/*
+!/templates/*
