@@ -1,0 +1,7 @@
+*
+!/MANIFEST.in
+!/pyproject.toml
+!/requirements.txt
+!/setup.cfg
+!/setup.py
+!/src/*

@@ -81,11 +81,17 @@
   ],
   "services": [
     {
+      "name": "immutable-example",
+      "lang": "immutable",
+      "handler": "immutable-example"
+    },
+    {
       "name": "api",
       "lang": "flask",
       "handler": "api",
       "secrets_config": "api-bridge.secrets.cfg",
       "secrets_export_dockerfile": "api-bridge.secrets.Dockerfile",
+      "manifest": "MANIFEST",
       "environment": [
         {
           "name": "PORT",
@@ -101,6 +107,7 @@
       "name": "chillstatic",
       "lang": "chill",
       "handler": "chill-static-example",
+      "manifest": "MANIFEST",
       "environment": [
         {
           "name": "freeze",
@@ -120,6 +127,7 @@
       "name": "chilldynamic",
       "lang": "chill",
       "handler": "chill-dynamic-example",
+      "manifest": "MANIFEST",
       "environment": [
         {
           "name": "freeze",
