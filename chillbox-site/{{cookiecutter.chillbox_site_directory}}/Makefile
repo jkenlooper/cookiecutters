@@ -42,21 +42,21 @@ help: ## Show this help
 .PHONY: dist
 dist: dist/$(slugname)-$(VERSION).tar.gz ## Create release tar.gz file for distribution
 
-# Run the {{ cookiecutter.bin_directory }}/artifact.sh script to create the dist/artifact.tar.gz file.
-dist/artifact.tar.gz: {{ cookiecutter.bin_directory }}/artifact.sh
+# Run the bin/artifact.sh script to create the dist/artifact.tar.gz file.
+dist/artifact.tar.gz: bin/artifact.sh
 	./$< $(abspath $@)
 
-# Run the {{ cookiecutter.bin_directory }}/immutable.sh script to create the dist/immutable.tar.gz file.
-dist/immutable.tar.gz: {{ cookiecutter.bin_directory }}/immutable.sh
+# Run the bin/immutable.sh script to create the dist/immutable.tar.gz file.
+dist/immutable.tar.gz: bin/immutable.sh
 	./$< -s $(slugname) -t $(abspath $@) \
 		$(project_dir)immutable-example
 
-dist/$(slugname)-$(VERSION).tar.gz: {{ cookiecutter.bin_directory }}/release.sh $(project_files)
+dist/$(slugname)-$(VERSION).tar.gz: bin/release.sh $(project_files)
 	./$< -s $(slugname) -t $(abspath $@)
 
 .PHONY: start
 start: ## Start local development
-	./{{ cookiecutter.bin_directory }}/local-start.sh
+	./bin/local-start.sh
 
 .PHONY: clean
 clean: ## Remove files that were created

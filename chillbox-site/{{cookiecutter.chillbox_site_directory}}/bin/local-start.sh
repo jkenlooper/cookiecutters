@@ -175,6 +175,7 @@ build_start_chill_dynamic_example() {
 }
 
 build_start_nginx() {
+  #TODO Read from local.site.json and get env_names_to_expand_via_site_json to pass to nginx. Or pass the local.site.json to nginx container?
   service_handler="nginx"
   host="$nginx_host"
   docker image rm "$host" > /dev/null 2>&1 || printf ""
