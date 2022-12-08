@@ -1,5 +1,5 @@
 {
-  "name": "Site One",
+  "name": "{{ cookiecutter.slugname }}",
   "release": "https://example.test/this_whole_string_is_replaced_with_an_absolute_file_path_in_terra.sh",
   "contact": {
     "owner": "{{ cookiecutter.slugname }}@example.test",
@@ -12,6 +12,10 @@
   "env": [
     {
       "name": "CHILL_STATIC_EXAMPLE_TRY_FILES_LAST_PARAM",
+      "value": "@chill-static-example"
+    },
+    {
+      "name": "CHILL_STATIC_EXAMPLE_TRY_FILES_LAST_PARAM__chillbox",
       "value": "=404"
     },
     {
@@ -24,6 +28,11 @@
     },
     {
       "name": "CHILL_STATIC_EXAMPLE_HOST",
+      "value": "$SLUGNAME-chill-static-example-$PROJECT_NAME_HASH",
+      "cmd": "printf '%s' '$SLUGNAME-chill-static-example-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
+    },
+    {
+      "name": "CHILL_STATIC_EXAMPLE_HOST__chillbox",
       "value": "localhost"
     },
     {
@@ -44,6 +53,11 @@
     },
     {
       "name": "CHILL_DYNAMIC_EXAMPLE_HOST",
+      "value": "$SLUGNAME-chill-dynamic-example-$PROJECT_NAME_HASH",
+      "cmd": "printf '%s' '$SLUGNAME-chill-dynamic-example-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
+    },
+    {
+      "name": "CHILL_DYNAMIC_EXAMPLE_HOST__chillbox",
       "value": "localhost"
     },
     {
@@ -60,14 +74,36 @@
     },
     {
       "name": "API_HOST",
+      "value": "$SLUGNAME-api-$PROJECT_NAME_HASH",
+      "cmd": "printf '%s' '$SLUGNAME-api-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
+    },
+    {
+      "name": "API_HOST__chillbox",
       "value": "localhost"
+    },
+    {
+      "name": "IMMUTABLE_EXAMPLE_PORT",
+      "value": "8080"
     },
     {
       "name": "IMMUTABLE_EXAMPLE_PATH",
       "value": "/immutable-example/v1/$IMMUTABLE_EXAMPLE_HASH/"
     },
     {
+      "name": "IMMUTABLE_EXAMPLE_HOST",
+      "value": "$SLUGNAME-immutable-example-$PROJECT_NAME_HASH",
+      "cmd": "printf '%s' '$SLUGNAME-immutable-example-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
+    },
+    {
+      "name": "IMMUTABLE_EXAMPLE_HOST__chillbox",
+      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME"
+    },
+    {
       "name": "IMMUTABLE_EXAMPLE_URL",
+      "value": "http://$IMMUTABLE_EXAMPLE_HOST:$IMMUTABLE_EXAMPLE_PORT/"
+    },
+    {
+      "name": "IMMUTABLE_EXAMPLE_URL__chillbox",
       "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME/$SLUGNAME/immutable/immutable-example/$IMMUTABLE_EXAMPLE_HASH/"
     },
     {
@@ -83,16 +119,26 @@
     {
       "name": "immutable-example",
       "lang": "immutable",
-      "handler": "immutable-example"
+      "handler": "immutable-example",
+      "environment": [
+        {
+          "name": "HOST",
+          "value": "$IMMUTABLE_EXAMPLE_HOST"
+        }
+      ]
     },
     {
       "name": "api",
       "lang": "flask",
       "handler": "api",
-      "secrets_config": "api-bridge.secrets.cfg",
-      "secrets_export_dockerfile": "api-bridge.secrets.Dockerfile",
+      "secrets_config": "api.secrets.cfg",
+      "secrets_export_dockerfile": "api.secrets.Dockerfile",
       "manifest": "MANIFEST",
       "environment": [
+        {
+          "name": "HOST",
+          "value": "$API_HOST"
+        },
         {
           "name": "PORT",
           "value": "$API_PORT"
@@ -114,6 +160,10 @@
           "value": "true"
         },
         {
+          "name": "HOST",
+          "value": "$CHILL_STATIC_EXAMPLE_HOST"
+        },
+        {
           "name": "CHILL_HOST",
           "value": "localhost"
         },
@@ -132,6 +182,10 @@
         {
           "name": "freeze",
           "value": "false"
+        },
+        {
+          "name": "HOST",
+          "value": "$CHILL_DYNAMIC_EXAMPLE_HOST"
         },
         {
           "name": "CHILL_HOST",

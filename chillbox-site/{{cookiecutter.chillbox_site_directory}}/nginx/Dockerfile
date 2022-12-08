@@ -14,35 +14,9 @@ ENV IMMUTABLE_BUCKET_DOMAIN_NAME=http://chillbox-minio:9000
 ENV ARTIFACT_BUCKET_NAME=chillboxartifact
 ENV SLUGNAME={{ cookiecutter.slugname }}
 ENV VERSION=0
-ENV SERVER_NAME=localhost
+# SERVER_NAME is set to empty string so nginx will not require Host header; which is useful for local development.
+ENV SERVER_NAME='""'
 ENV SERVER_PORT=80
-
-# These env vars match with what the site.json provides.
-
-ENV API_PATH=/api/
-ENV API_PORT=8100
-ENV API_SCHEME=http
-ENV API_HOST=$SLUGNAME-api
-
-ENV CHILL_STATIC_EXAMPLE_TRY_FILES_LAST_PARAM=@chill-static-example
-ENV CHILL_STATIC_EXAMPLE_PATH=/
-ENV CHILL_STATIC_EXAMPLE_PORT=5000
-ENV CHILL_STATIC_EXAMPLE_SCHEME=http
-ENV CHILL_STATIC_EXAMPLE_HOST=$SLUGNAME-chill-static-example
-
-ENV CHILL_DYNAMIC_EXAMPLE_PATH=/dynamic/
-ENV CHILL_DYNAMIC_EXAMPLE_PORT=5001
-ENV CHILL_DYNAMIC_EXAMPLE_SCHEME=http
-ENV CHILL_DYNAMIC_EXAMPLE_HOST=$SLUGNAME-chill-dynamic-example
-
-# The IMMUTABLE_EXAMPLE_PATH should not be passed to the proxy because it ends
-# with a slash ('/') character. The proxy url IMMUTABLE_EXAMPLE_URL will typically
-# have it's own route that ends with a hash string and a slash character. When developing locally this
-# IMMUTABLE_EXAMPLE_URL is set to the localhost server with a specific port.
-ENV IMMUTABLE_EXAMPLE_PATH="/this-should-always-end-with-a-slash/"
-ENV IMMUTABLE_EXAMPLE_PORT=8080
-ENV IMMUTABLE_EXAMPLE_URL=http://$SLUGNAME-immutable-example:$IMMUTABLE_EXAMPLE_PORT/
-ENV IMMUTABLE_EXAMPLE_HASH="fake-hash"
 
 WORKDIR /build
 
@@ -70,6 +44,7 @@ set -o errexit
 apk update
 apk add --no-cache \
   gettext \
+  jq \
   entr
 
 mkdir -p .tmp
@@ -116,8 +91,8 @@ for d in templates; do
 done
 
 # Show the access log along with the nginx output
-touch /var/log/nginx/{{ cookiecutter.slugname }}/access.log
-tail -f /var/log/nginx/{{ cookiecutter.slugname }}/access.log &
+touch /var/log/nginx/$SLUGNAME/access.log
+tail -f /var/log/nginx/$SLUGNAME/access.log &
 
 cat "$tmp_watch_files" | entr -rzdn "$project_dir/reload-templates.sh"
 MEOW
@@ -126,74 +101,57 @@ cat <<'HISS' > reload-templates.sh
 #!/usr/bin/env sh
 set -o errexit
 script_name="$(basename "$0")"
-if [ -f /etc/nginx/conf.d/{{ cookiecutter.slugname }}.nginx.conf ]; then
-  cp /etc/nginx/conf.d/{{ cookiecutter.slugname }}.nginx.conf /etc/nginx/conf.d/{{ cookiecutter.slugname }}.nginx.conf.bak
-fi
 
-env_names_to_expand_via_chillbox="
-ARTIFACT_BUCKET_NAME
-AWS_PROFILE
-CHILLBOX_ARTIFACT
-CHILLBOX_SERVER_NAME
-CHILLBOX_SERVER_PORT
-IMMUTABLE_BUCKET_DOMAIN_NAME
-IMMUTABLE_BUCKET_NAME
-LETS_ENCRYPT_SERVER
-S3_ENDPOINT_URL
-SERVER_NAME
-SERVER_PORT
-SITES_ARTIFACT
-SLUGNAME
-TECH_EMAIL
-VERSION
-"
-env_names_to_expand_via_site_json="
-API_HOST
-API_PATH
-API_PORT
-API_SCHEME
-CHILL_DYNAMIC_EXAMPLE_HOST
-CHILL_DYNAMIC_EXAMPLE_PATH
-CHILL_DYNAMIC_EXAMPLE_PORT
-CHILL_DYNAMIC_EXAMPLE_SCHEME
-CHILL_STATIC_EXAMPLE_HOST
-CHILL_STATIC_EXAMPLE_PATH
-CHILL_STATIC_EXAMPLE_PORT
-CHILL_STATIC_EXAMPLE_SCHEME
-CHILL_STATIC_EXAMPLE_TRY_FILES_LAST_PARAM
-IMMUTABLE_EXAMPLE_HASH
-IMMUTABLE_EXAMPLE_PATH
-IMMUTABLE_EXAMPLE_PORT
-IMMUTABLE_EXAMPLE_URL
-"
-env_names_to_expand="$env_names_to_expand_via_chillbox $env_names_to_expand_via_site_json"
-env_names="$(printf "%s" "$env_names_to_expand" | sed 's/./$&/; /\S/!d' | xargs)"
-# Expand and check that all environment variables have been set and have values
-# to avoid replacing with empty strings.
-for env_var in $env_names; do
-  check_var="$(eval "printf \"%s\" \"$env_var\"")"
-  test -n "$check_var" || (echo "ERROR The environment variable has no value $env_var" >&2 && exit 1)
-done
-envsubst "$env_names" < /build/templates/{{ cookiecutter.slugname }}.nginx.conf.template > /etc/nginx/conf.d/{{ cookiecutter.slugname }}.nginx.conf
+template_path="/build/templates/$SLUGNAME.nginx.conf.template"
+slugname_nginx_conf="$(basename "$template_path" ".template")"
 
-if [ -n "$(grep '${.\+}' /etc/nginx/conf.d/{{ cookiecutter.slugname }}.nginx.conf || printf "")" ]; then
-  echo "ERROR $script_name Not all env variables were replaced from /build/templates/{{ cookiecutter.slugname }}.nginx.conf.template"
-  grep -H -n '${.\+}' /etc/nginx/conf.d/{{ cookiecutter.slugname }}.nginx.conf
-  exit 1
-fi
+var_curly_regex='${.\+}'
 
-chown -R nginx:nginx /etc/nginx/conf.d/{{ cookiecutter.slugname }}.nginx.conf
-if nginx -t; then
-    echo "INFO $script_name Passed test of nginx configuration."
-else
-  echo "ERROR $script_name Failed test of nginx configuration."
-  if [ -f /etc/nginx/conf.d/{{ cookiecutter.slugname }}.nginx.conf.bak ]; then
-    echo "INFO $script_name Switching back to previous {{ cookiecutter.slugname }}.nginx.conf."
-    cp /etc/nginx/conf.d/{{ cookiecutter.slugname }}.nginx.conf /etc/nginx/conf.d/{{ cookiecutter.slugname }}.nginx.conf.failed
-    mv /etc/nginx/conf.d/{{ cookiecutter.slugname }}.nginx.conf.bak /etc/nginx/conf.d/{{ cookiecutter.slugname }}.nginx.conf
-    echo "INFO $script_name Please review failed configuration file /etc/nginx/conf.d/{{ cookiecutter.slugname }}.nginx.conf.failed that was generated from /build/templates/{{ cookiecutter.slugname }}.nginx.conf.template"
+fallback_nginx_conf() {
+  nginx_conf="$1"
+  test -n "$nginx_conf" || (echo "ERROR $script_name fallback_nginx_conf" >&2 && exit 1)
+  if [ -f "/etc/nginx/conf.d/$nginx_conf.bak" ]; then
+    echo "INFO $script_name Switching back to previous /etc/nginx/conf.d/$nginx_conf"
+    cp "/etc/nginx/conf.d/$nginx_conf" "/etc/nginx/conf.d/$nginx_conf.failed"
+    mv "/etc/nginx/conf.d/$nginx_conf.bak" "/etc/nginx/conf.d/$nginx_conf"
+    echo "INFO $script_name Please review failed configuration file /etc/nginx/conf.d/$nginx_conf.failed"
+  else
+    if [ -f "/etc/nginx/conf.d/$nginx_conf" ]; then
+      mv "/etc/nginx/conf.d/$nginx_conf" "/etc/nginx/conf.d/$nginx_conf.failed"
+      echo "INFO $script_name Please review failed configuration file /etc/nginx/conf.d/$nginx_conf.failed"
+      rm -f "/etc/nginx/conf.d/$nginx_conf"
+    fi
   fi
+  printf "\n\n########\n%s\n########\n\n" "Start /etc/nginx/conf.d/$nginx_conf.failed"
+  cat  "/etc/nginx/conf.d/$nginx_conf.failed"
+  printf "\n\n########\n%s\n########\n\n" "End /etc/nginx/conf.d/$nginx_conf.failed"
+}
+
+if [ -f "/etc/nginx/conf.d/$slugname_nginx_conf" ]; then
+  cp "/etc/nginx/conf.d/$slugname_nginx_conf" "/etc/nginx/conf.d/$slugname_nginx_conf.bak"
 fi
+
+/build/envsubst-site-env.sh -c /build/local.site.json \
+  < "$template_path" > "/etc/nginx/conf.d/$slugname_nginx_conf"
+
+if [ -n "$(grep "$var_curly_regex" "/etc/nginx/conf.d/$slugname_nginx_conf" || printf "")" ]; then
+  echo "ERROR $script_name: Not all env variables were replaced from $template_path" >&2
+  grep -H -n "$var_curly_regex" "/etc/nginx/conf.d/$slugname_nginx_conf"
+  fallback_nginx_conf "$slugname_nginx_conf"
+fi
+
+chown -R nginx:nginx /etc/nginx/conf.d/$slugname_nginx_conf
+
+if nginx -t; then
+  if [ -f "/etc/nginx/conf.d/$slugname_nginx_conf" ]; then
+    echo "INFO $script_name Passed test of nginx configuration"
+  fi
+else
+  echo "ERROR $script_name: Failed test of nginx configuration after updating /etc/nginx/conf.d/$slugname_nginx_conf from $template_path." >&2
+  fallback_nginx_conf "$slugname_nginx_conf"
+fi
+
+# Do a sanity check to make sure nginx conf is still good.
 nginx -t
 nginx -g 'daemon off;'
 HISS

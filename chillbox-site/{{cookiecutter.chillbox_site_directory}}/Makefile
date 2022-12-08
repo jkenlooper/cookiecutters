@@ -55,7 +55,11 @@ dist/$(slugname)-$(VERSION).tar.gz: bin/release.sh $(project_files)
 
 .PHONY: start
 start: ## Start local development
-	./bin/local-start.sh
+	./bin/local-start.sh -s $(slugname) local.site.json
+
+.PHONY: stop
+stop: ## Stop local development
+	./bin/local-stop.sh -s $(slugname) local.site.json
 
 .PHONY: clean
 clean: ## Remove files that were created

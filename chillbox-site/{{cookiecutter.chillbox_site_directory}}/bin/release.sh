@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+# {{ cookiecutter.template_file_comment }}
+
 set -o errexit
 
 projectdir="$(dirname "$(dirname "$(realpath "$0")")")"

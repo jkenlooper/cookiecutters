@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# {{ cookiecutter.template_file_comment }}
+
 set -o errexit
 
 warning_message_about_local_use="
@@ -10,7 +12,6 @@ Do not input sensitive information when using this script.
 *** WARNING ***
 "
 
-slugname={{ cookiecutter.slugname }}
 
 script_dir="$(dirname "$(realpath "$0")")"
 project_dir="$(dirname "${script_dir}")"
@@ -18,15 +19,6 @@ script_name="$(basename "$0")"
 project_dir_basename="$(basename "$project_dir")"
 project_name_hash="$(printf "%s" "$project_dir" | md5sum | cut -d' ' -f1)"
 {{ 'test "${#project_name_hash}" -eq "32" || (echo "ERROR $script_name: Failed to create a project name hash from the project dir ($project_dir)" && exit 1)' }}
-
-# Storing the local development secrets in the user data directory for this site
-# depending on the project directory path at the time.
-# https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-site_data_home="${XDG_DATA_HOME:-"$HOME/.local/share"}/$project_dir_basename-$slugname--$project_name_hash"
-
-not_encrypted_secrets_dir="$site_data_home/not-encrypted-secrets"
-
-not_secure_key_dir="$site_data_home/not-secure-keys"
 
 
 usage() {
@@ -42,18 +34,50 @@ should not be considered sensitive. Do not use secrets that can be used outside
 of the local machine like credentials or API keys to third party services.
 
 The local development of a site should not need access to remote services.
+
+Usage:
+  $script_name -h
+  $script_name -s <slugname> <site_json_file>
+
+Options:
+  -h                  Show this help message.
+
+  -s <slugname>       Set the slugname.
+
+Args:
+  <site_json_file>    Site json file with services.
+
 HERE
 }
 
-while getopts "h" OPTION ; do
+slugname=""
+
+while getopts "hs:" OPTION ; do
   case "$OPTION" in
     h) usage
        exit 0 ;;
+    s) slugname=$OPTARG ;;
     ?) usage
        exit 1 ;;
   esac
 done
+shift $((OPTIND - 1))
 
+site_json_file="$1"
+
+test -n "$slugname" || (echo "ERROR $script_name: No slugname set." >&2 && usage && exit 1)
+test -n "$site_json_file" || (echo "ERROR $script_name: No argument set for the site json file." >&2 && usage && exit 1)
+site_json_file="$(realpath "$site_json_file")"
+test -f "$site_json_file" || (echo "ERROR $script_name: The $site_json_file is not a file." >&2 && usage && exit 1)
+
+# Storing the local development secrets in the user data directory for this site
+# depending on the project directory path at the time.
+# https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+site_data_home="${XDG_DATA_HOME:-"$HOME/.local/share"}/$project_dir_basename-$slugname--$project_name_hash"
+
+not_encrypted_secrets_dir="$site_data_home/not-encrypted-secrets"
+
+not_secure_key_dir="$site_data_home/not-secure-keys"
 
 # The fake-encrypt-file script closely matches the encrypt-file from the
 # chillbox repository.
@@ -151,20 +175,26 @@ export DOCKER_BUILDKIT=1
     -t "$sleeper_image" \
     -
 
-site_json="$project_dir/local.site.json"
 version="0.0.0-local+$project_name_hash"
 
-services="$(jq -c '.services // [] | .[]' "$site_json")"
-test -n "${services}" || (echo "WARNING $script_name: No services found in $site_json." && exit 0)
-
-for service_obj in $services; do
-  test -n "${service_obj}" || continue
-
-  secrets_config="$(echo "$service_obj" | jq -r '.secrets_config // ""')"
+services="$(jq -c '.services // [] | .[]' "$site_json_file")"
+test -n "$services" || (echo "WARNING $script_name: No services found in $site_json_file." && exit 0)
+IFS="$(printf '\n ')" && IFS="${IFS% }"
+#shellcheck disable=SC2086
+set -f -- $services
+for service_json_obj in "$@"; do
+  test -n "$service_json_obj" || continue
+  service_handler=""
+  secrets_config=""
+  secrets_export_dockerfile="$(echo "$service_json_obj" | jq -r '.secrets_export_dockerfile // ""')"
+  eval "$(echo "$service_json_obj" | jq -r '@sh "
+    service_handler=\(.handler)
+    secrets_config=\(.secrets_config // "")
+    secrets_export_dockerfile=\(.secrets_export_dockerfile // "")
+    "')"
+  echo "$service_handler"
   test -n "$secrets_config" || continue
-  service_handler="$(echo "$service_obj" | jq -r '.handler')"
-  secrets_export_dockerfile="$(echo "$service_obj" | jq -r '.secrets_export_dockerfile // ""')"
-  test -n "$secrets_export_dockerfile" || (echo "ERROR $script_name: No secrets_export_dockerfile value set in services, yet secrets_config is defined. $slugname - $service_obj" && exit 1)
+  test -n "$secrets_export_dockerfile" || (echo "ERROR $script_name: No secrets_export_dockerfile value set in services, yet secrets_config is defined. $slugname - $service_json_obj" && exit 1)
 
   mkdir -p "$not_encrypted_secrets_dir"
 
