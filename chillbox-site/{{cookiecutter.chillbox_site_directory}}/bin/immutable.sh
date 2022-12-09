@@ -52,7 +52,7 @@ create_archive() {
     directory_full_path="$(realpath "$service_handler")"
     test -d "$directory_full_path" || (echo "ERROR $script_name: The provided service handler ($service_handler) is not a directory at $directory_full_path" >&2 && exit 1)
     hash_string="$(make --silent -C "$directory_full_path" --no-print-directory inspect.HASH)"
-    test "${#hash_string}" -eq "32" || (echo "ERROR $script_name: The hash string is not 32 characters in length. Did something fail? ($hash_string)" >&2 && exit 1)
+    {{ 'test "${#hash_string}" -eq "32" || (echo "ERROR $script_name: The hash string is not 32 characters in length. Did something fail? ($hash_string)" >&2 && exit 1)' }}
     mkdir -p "$tmpdir/$slugname/$service_name/$hash_string"
     printf "%s" "$hash_string" > "$tmpdir/$slugname/$service_name/hash.txt"
     make -C "$directory_full_path"

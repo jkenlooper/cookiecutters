@@ -14,5 +14,6 @@ cookiecutter --directory {{ cookiecutter._directory }} \
   --no-input \
   {{ cookiecutter._repo }}.git \
   slugname={{ cookiecutter.slugname }} \
+  local_app_port={{ cookiecutter.local_app_port }} \
   chillbox_site_directory={{ cookiecutter.chillbox_site_directory }}
 ```

@@ -36,62 +36,30 @@ server {
     proxy_pass ${CHILL_STATIC_SCHEME}://${CHILL_STATIC_HOST}:$CHILL_STATIC_PORT;
   }
 
-  location ${DESIGN_TOKENS_PATH} {
-    limit_except GET {
-      deny all;
-    }
-    proxy_cache var_cache_nginx;
-    proxy_cache_valid 1y;
-    add_header X-Proxy-Cache $upstream_cache_status;
-    # Use a URL that ends with a slash because that is where the resources
-    # matching the path in the location will be located.
-    proxy_pass ${DESIGN_TOKENS_URL};
+  location ${CHILL_DYNAMIC_EXAMPLE_PATH} {
+    # The URL used here does not end with a slash; the location that was matched
+    # is passed to the proxy.
+    proxy_pass ${CHILL_DYNAMIC_EXAMPLE_SCHEME}://${CHILL_DYNAMIC_EXAMPLE_HOST}:$CHILL_DYNAMIC_EXAMPLE_PORT;
   }
 
-  location ${CLIENT_SIDE_PUBLIC_PATH} {
-    limit_except GET {
-      deny all;
-    }
-    proxy_cache var_cache_nginx;
-    proxy_cache_valid 1y;
-    add_header X-Proxy-Cache $upstream_cache_status;
-    # Use a URL that ends with a slash because that is where the resources
-    # matching the path in the location will be located.
-    proxy_pass ${CLIENT_SIDE_PUBLIC_URL};
+  location ${API_PATH} {
+    proxy_pass ${API_SCHEME}://${API_HOST}:$API_PORT/;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Prefix /;
   }
 
-  location ${SOURCE_MEDIA_PATH} {
+  location ${IMMUTABLE_EXAMPLE_PATH} {
     limit_except GET {
       deny all;
     }
     proxy_cache var_cache_nginx;
-    proxy_cache_valid 1y;
+    proxy_cache_valid ${PROXY_CACHE_VALID};
     add_header X-Proxy-Cache $upstream_cache_status;
     # Use a URL that ends with a slash because that is where the resources
     # matching the path in the location will be located.
-    proxy_pass ${SOURCE_MEDIA_URL};
-  }
-  # favicon won't have a version to cache-bust
-  location = /favicon.ico {
-    limit_except GET {
-      deny all;
-    }
-    proxy_cache var_cache_nginx;
-    proxy_cache_valid 1y;
-    add_header X-Proxy-Cache $upstream_cache_status;
-    proxy_pass ${SOURCE_MEDIA_URL}favicon.ico;
-  }
-
-  location ${CODE_SNIPPETS_PATH} {
-    limit_except GET {
-      deny all;
-    }
-    proxy_cache var_cache_nginx;
-    proxy_cache_valid 1y;
-    add_header X-Proxy-Cache $upstream_cache_status;
-    # Use a URL that ends with a slash because that is where the resources
-    # matching the path in the location will be located.
-    proxy_pass ${CODE_SNIPPETS_URL};
+    proxy_pass ${IMMUTABLE_EXAMPLE_URL};
   }
 
   # For SSL cert validation

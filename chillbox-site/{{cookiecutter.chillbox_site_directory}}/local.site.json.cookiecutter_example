@@ -1,6 +1,6 @@
 {
   "name": "{{ cookiecutter.slugname }}",
-  "release": "https://example.test/this_whole_string_is_replaced_with_an_absolute_file_path_in_terra.sh",
+  "release": "Not applicable for local development. Change to absolute path or a URL when deploying with chillbox.",
   "contact": {
     "owner": "{{ cookiecutter.slugname }}@example.test",
     "technical": "{{ cookiecutter.slugname }}@example.test"
@@ -110,6 +110,14 @@
       "name": "IMMUTABLE_EXAMPLE_HASH",
       "value": "replaced-with-cmd-to-get-hash",
       "cmd": "make --silent --directory=immutable-example --no-print-directory inspect.HASH"
+    },
+    {
+      "name": "PROXY_CACHE_VALID__chillbox",
+      "value": "1y"
+    },
+    {
+      "name": "PROXY_CACHE_VALID",
+      "value": "1s"
     }
   ],
   "crontab": [

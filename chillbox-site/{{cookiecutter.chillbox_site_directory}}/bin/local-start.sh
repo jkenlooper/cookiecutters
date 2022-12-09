@@ -47,7 +47,7 @@ test -n "$site_json_file" || (echo "ERROR $script_name: No argument set for the 
 site_json_file="$(realpath "$site_json_file")"
 test -f "$site_json_file" || (echo "ERROR $script_name: The $site_json_file is not a file." >&2 && usage && exit 1)
 
-app_port=8088
+app_port={{ cookiecutter.local_app_port }}
 script_dir="$(dirname "$(realpath "$0")")"
 project_dir="$(dirname "${script_dir}")"
 site_version_string="$(make --silent -C "$project_dir" inspect.VERSION)"
@@ -100,12 +100,6 @@ cat <<MEOW >> "$site_env"
 export PROJECT_NAME_HASH=$project_name_hash
 MEOW
 
-# Hostnames can't be over 63 characters
-chill_static_example_host="$(printf '%s' "$slugname-chill-static-example-$project_name_hash" | grep -o -E '^.{0,63}')"
-chill_dynamic_example_host="$(printf '%s' "$slugname-chill-dynamic-example-$project_name_hash" | grep -o -E '^.{0,63}')"
-api_host="$(printf '%s' "$slugname-api-$project_name_hash" | grep -o -E '^.{0,63}')"
-immutable_example_host="$(printf '%s' "$slugname-immutable-example-$project_name_hash" | grep -o -E '^.{0,63}')"
-nginx_host="$(printf '%s' "$slugname-nginx-$project_name_hash" | grep -o -E '^.{0,63}')"
 
 # shellcheck disable=SC1091
 . "$site_env"
@@ -167,14 +161,15 @@ jq -r '.env // [] | .[] | .name + "=" + .value' "$site_json_file" \
 "$script_dir/local-stop.sh" -s "$slugname" "$site_json_file"
 
 # TODO Run the local-s3 container?
-chillbox_minio_state="$(docker inspect --format '{{.State.Running}}' chillbox-minio || printf "false")"
-chillbox_local_shared_secrets_state="$(docker inspect --format '{{.State.Running}}' chillbox-local-shared-secrets || printf "false")"
-if [ "${chillbox_minio_state}" = "true" ] && [ "${chillbox_local_shared_secrets_state}" = "true" ]; then
-  echo "chillbox local is running"
-else
-  "${project_dir}/local-s3/local-chillbox.sh"
+if [ -d "${project_dir}/local-s3" ]; then
+  chillbox_minio_state="$(docker inspect --format '{{ '{{.State.Running}}' }}' chillbox-minio || printf "false")"
+  chillbox_local_shared_secrets_state="$(docker inspect --format '{{ '{{.State.Running}}' }}' chillbox-local-shared-secrets || printf "false")"
+  if [ "${chillbox_minio_state}" = "true" ] && [ "${chillbox_local_shared_secrets_state}" = "true" ]; then
+    echo "chillbox local is running"
+  else
+    "${project_dir}/local-s3/local-chillbox.sh"
+  fi
 fi
-
 
 services="$(jq -c '.services // [] | .[]' "$site_json_file")"
 IFS="$(printf '\n ')" && IFS="${IFS% }"
@@ -193,6 +188,10 @@ for service_json_obj in "$@"; do
   eval "$(echo "$service_json_obj" | jq -r '.environment // [] | .[] | "export " + .name + "=" + (.value | @sh)' \
     | "$script_dir/envsubst-site-env.sh" -c "$site_json_file")"
 
+  # Hostnames can't be over 63 characters
+  # TODO Fix the local.site.json parsing of cmd to properly fix this.
+  #HOST="$(printf '%s' "$HOST" | grep -o -E '^.{0,63}')"
+
   # The ports on these do not need to be exposed since nginx is in front of them.
   case "$service_lang" in
 
@@ -204,7 +203,7 @@ for service_json_obj in "$@"; do
           --target build \
           -t "$HOST" \
           "$project_dir/$service_handler"
-      docker run -d \
+      docker run -d --tty \
         --network chillboxnet \
         --env-file "$site_env_vars_file" \
         --mount "type=bind,src=$project_dir/$service_handler/src,dst=/build/src,readonly" \
@@ -263,6 +262,7 @@ for service_json_obj in "$@"; do
 
 done
 
+# Hostnames can't be over 63 characters
 nginx_host="$(printf '%s' "$slugname-nginx-$project_name_hash" | grep -o -E '^.{0,63}')"
 build_start_nginx() {
   service_handler="nginx"
