@@ -70,6 +70,7 @@ not_encrypted_secrets_dir="$site_data_home/not-encrypted-secrets"
 site_env="$site_state_home/local-start-site-env"
 site_env_vars_file="$site_state_home/local-start-site-env-vars"
 chillbox_config_file="$site_state_home/local-chillbox-config"
+modified_site_json_file="$site_state_home/local-modified.site.json"
 
 cat <<MEOW > "$chillbox_config_file"
 export CHILLBOX_ARTIFACT=not-applicable
@@ -100,7 +101,6 @@ cat <<MEOW >> "$site_env"
 export PROJECT_NAME_HASH=$project_name_hash
 MEOW
 
-
 # shellcheck disable=SC1091
 . "$site_env"
 
@@ -114,15 +114,25 @@ MEOW
   # the site.json should be trusted, but it is a little safer to confirm
   # with the user first.
   jq -r \
-    '.env[] | select(.cmd != null) | .name + "=\"$(" + .cmd + ")\"; export " + .name' \
+    '.env[] | select(.cmd != null) | .name + "=\"$(" + .cmd + ")\";\\\nexport " + .name' \
     "$site_json_file" > "$tmp_eval"
   # Only need to prompt the user if a cmd was set.
   if [ -n "$(sed 's/\s//g; /^$/d' "$tmp_eval")" ]; then
-    eval "$(cat "$tmp_eval")"
-    cp "$site_json_file" "$site_json_file.original"
-    jq \
-      '(.env[] | select(.cmd != null)) |= . + {name: .name, value: $ENV[.name]}' < "$site_json_file.original" > "$site_json_file"
-    rm "$site_json_file.original"
+    printf "\n\n--- ###\n\n"
+    cat "$tmp_eval"
+    printf "\n\n--- ###\n\n"
+    printf "%s\n" "Execute the above commands so the matching env fields from the project's site json file can be updated?"
+    printf "%s\n" "Original: $site_json_file"
+    printf "%s\n" "Modify: $modified_site_json_file"
+    printf "%s\n" "Proceed? [y/n]"
+    read -r eval_cmd_confirm
+    if [ "$eval_cmd_confirm" = "y" ]; then
+      eval "$(cat "$tmp_eval")"
+      jq \
+        '(.env[] | select(.cmd != null)) |= . + {name: .name, value: $ENV[.name]}' < "$site_json_file" > "$modified_site_json_file"
+    else
+      exit
+    fi
   fi
   rm -f "$tmp_eval"
 )
@@ -130,8 +140,8 @@ MEOW
 
 export ENV_FILE="$site_env"
 export CHILLBOX_CONFIG_FILE="$chillbox_config_file"
-eval "$(jq -r '.env // [] | .[] | "export " + .name + "=" + (.value | @sh)' "$site_json_file" \
-  | "$script_dir/envsubst-site-env.sh" -c "$site_json_file")"
+eval "$(jq -r '.env // [] | .[] | "export " + .name + "=" + (.value | @sh)' "$modified_site_json_file" \
+  | "$script_dir/envsubst-site-env.sh" -c "$modified_site_json_file")"
 
 cat <<MEOW > "$site_env_vars_file"
 # Generated from $0 on $(date)
@@ -152,13 +162,14 @@ SLUGNAME=$slugname
 TECH_EMAIL=llama@local.test
 VERSION=$site_version_string
 MEOW
-jq -r '.env // [] | .[] | .name + "=" + .value' "$site_json_file" \
-  | "$script_dir/envsubst-site-env.sh" -c "$site_json_file" >> "$site_env_vars_file"
+jq -r '.env // [] | .[] | .name + "=" + .value' "$modified_site_json_file" \
+  | "$script_dir/envsubst-site-env.sh" -c "$modified_site_json_file" >> "$site_env_vars_file"
 
 #cat "$site_env_vars_file"
 . "$script_dir/utils.sh"
 
-"$script_dir/local-stop.sh" -s "$slugname" "$site_json_file"
+# To stop the containers, it doesn't require using the modified json file.
+stop_and_rm_containers_silently "$slugname" "$project_name_hash" "$site_json_file"
 
 # TODO Run the local-s3 container?
 if [ -d "${project_dir}/local-s3" ]; then
@@ -171,7 +182,7 @@ if [ -d "${project_dir}/local-s3" ]; then
   fi
 fi
 
-services="$(jq -c '.services // [] | .[]' "$site_json_file")"
+services="$(jq -c '.services // [] | .[]' "$modified_site_json_file")"
 IFS="$(printf '\n ')" && IFS="${IFS% }"
 #shellcheck disable=SC2086
 set -f -- $services
@@ -186,47 +197,45 @@ for service_json_obj in "$@"; do
     "')"
   echo "$service_handler $service_name $service_lang"
   eval "$(echo "$service_json_obj" | jq -r '.environment // [] | .[] | "export " + .name + "=" + (.value | @sh)' \
-    | "$script_dir/envsubst-site-env.sh" -c "$site_json_file")"
-
-  # Hostnames can't be over 63 characters
-  # TODO Fix the local.site.json parsing of cmd to properly fix this.
-  #HOST="$(printf '%s' "$HOST" | grep -o -E '^.{0,63}')"
+    | "$script_dir/envsubst-site-env.sh" -c "$modified_site_json_file")"
+  image_name="$(printf '%s' "$slugname-$service_handler-$project_name_hash" | grep -o -E '^.{0,63}')"
+  container_name="$(printf '%s' "$slugname-$service_name-$project_name_hash" | grep -o -E '^.{0,63}')"
 
   # The ports on these do not need to be exposed since nginx is in front of them.
   case "$service_lang" in
 
     immutable)
-      printf '\n\n%s\n\n' "INFO $script_name: Starting $service_lang service: $HOST"
+      printf '\n\n%s\n\n' "INFO $script_name: Starting $service_lang service: $container_name"
       set -x
-      docker image rm "$HOST" > /dev/null 2>&1 || printf ""
+      docker image rm "$image_name" > /dev/null 2>&1 || printf ""
       DOCKER_BUILDKIT=1 docker build \
           --target build \
-          -t "$HOST" \
+          -t "$image_name" \
           "$project_dir/$service_handler"
       docker run -d --tty \
         --network chillboxnet \
         --env-file "$site_env_vars_file" \
         --mount "type=bind,src=$project_dir/$service_handler/src,dst=/build/src,readonly" \
-        --name "$HOST" \
-        "$HOST"
+        --name "$container_name" \
+        "$image_name"
       set +x
       ;;
 
     flask)
       if [ ! -e "$not_encrypted_secrets_dir/$service_handler/$service_handler.secrets.cfg" ]; then
-        "$script_dir/local-secrets.sh" -s "$slugname" "$site_json_file" || echo "Ignoring error from local-secrets.sh"
+        "$script_dir/local-secrets.sh" -s "$slugname" "$modified_site_json_file" || echo "Ignoring error from local-secrets.sh"
       fi
 
-      printf '\n\n%s\n\n' "INFO $script_name: Starting $service_lang service: $HOST"
+      printf '\n\n%s\n\n' "INFO $script_name: Starting $service_lang service: $container_name"
       set -x
-      docker image rm "$HOST" > /dev/null 2>&1 || printf ""
+      docker image rm "$image_name" > /dev/null 2>&1 || printf ""
       DOCKER_BUILDKIT=1 docker build \
-        -t "$HOST" \
+        -t "$image_name" \
         "$project_dir/$service_handler"
       # Switch to root user when troubleshooting or using bind mounts
-      echo "Running the $HOST container with root user."
+      echo "Running the $container_name container with root user."
       docker run -d --tty \
-        --name "$HOST" \
+        --name "$container_name" \
         --user root \
         --env-file "$site_env_vars_file" \
         -e HOST="localhost" \
@@ -235,26 +244,26 @@ for service_json_obj in "$@"; do
         --network chillboxnet \
         --mount "type=bind,src=$project_dir/$service_handler/src/${slugname}_${service_handler},dst=/usr/local/src/app/src/${slugname}_${service_handler},readonly" \
         --mount "type=bind,src=$not_encrypted_secrets_dir/$service_handler/$service_handler.secrets.cfg,dst=/var/lib/local-secrets/$slugname/$service_handler/$service_handler.secrets.cfg,readonly" \
-        "$HOST" ./flask-run.sh
+        "$image_name" ./flask-run.sh
       set +x
       ;;
 
     chill)
-      printf '\n\n%s\n\n' "INFO $script_name: Starting $service_lang service: $HOST"
+      printf '\n\n%s\n\n' "INFO $script_name: Starting $service_lang service: $container_name"
       set -x
-      docker image rm "$HOST" > /dev/null 2>&1 || printf ""
+      docker image rm "$image_name" > /dev/null 2>&1 || printf ""
       DOCKER_BUILDKIT=1 docker build \
-          -t "$HOST" \
+          -t "$image_name" \
           "$project_dir/$service_handler"
       docker run -d \
-        --name "$HOST" \
+        --name "$container_name" \
         --network chillboxnet \
         --env-file "$site_env_vars_file" \
-        --mount "type=volume,src=$HOST,dst=/var/lib/chill/sqlite3" \
+        --mount "type=volume,src=$container_name,dst=/var/lib/chill/sqlite3" \
         --mount "type=bind,src=$project_dir/$service_handler/documents,dst=/home/chill/app/documents" \
         --mount "type=bind,src=$project_dir/$service_handler/queries,dst=/home/chill/app/queries" \
         --mount "type=bind,src=$project_dir/$service_handler/templates,dst=/home/chill/app/templates" \
-        "$HOST"
+        "$image_name"
       set +x
       ;;
 
@@ -285,7 +294,7 @@ build_start_nginx() {
     --mount "type=bind,src=$CHILLBOX_CONFIG_FILE,dst=/build/local-chillbox-config,readonly" \
     --mount "type=bind,src=$project_dir/$service_handler/templates,dst=/build/templates,readonly" \
     --mount "type=bind,src=$project_dir/bin/envsubst-site-env.sh,dst=/build/envsubst-site-env.sh,readonly" \
-    --mount "type=bind,src=$site_json_file,dst=/build/local.site.json,readonly" \
+    --mount "type=bind,src=$modified_site_json_file,dst=/build/local.site.json,readonly" \
     "$host"
 }
 build_start_nginx

@@ -11,54 +11,54 @@
   ],
   "env": [
     {
-      "name": "CHILL_STATIC_EXAMPLE_TRY_FILES_LAST_PARAM",
-      "value": "@chill-static-example"
+      "name": "CHILL_STATIC_TRY_FILES_LAST_PARAM",
+      "value": "@chillstatic"
     },
     {
-      "name": "CHILL_STATIC_EXAMPLE_TRY_FILES_LAST_PARAM__chillbox",
+      "name": "CHILL_STATIC_TRY_FILES_LAST_PARAM__chillbox",
       "value": "=404"
     },
     {
-      "name": "CHILL_STATIC_EXAMPLE_PATH",
+      "name": "CHILL_STATIC_PATH",
       "value": "/"
     },
     {
-      "name": "CHILL_STATIC_EXAMPLE_SCHEME",
+      "name": "CHILL_STATIC_SCHEME",
       "value": "http"
     },
     {
-      "name": "CHILL_STATIC_EXAMPLE_HOST",
-      "value": "$SLUGNAME-chill-static-example-$PROJECT_NAME_HASH",
-      "cmd": "printf '%s' '$SLUGNAME-chill-static-example-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
+      "name": "CHILL_STATIC_HOST",
+      "value": "",
+      "cmd": "printf '%s' '$SLUGNAME-chillstatic-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
     },
     {
-      "name": "CHILL_STATIC_EXAMPLE_HOST__chillbox",
+      "name": "CHILL_STATIC_HOST__chillbox",
       "value": "localhost"
     },
     {
-      "name": "CHILL_STATIC_EXAMPLE_PORT",
+      "name": "CHILL_STATIC_PORT",
       "value": "5000"
     },
     {
-      "name": "CHILL_DYNAMIC_EXAMPLE_PATH",
-      "value": "/dynamic/"
+      "name": "CHILL_DYNAMIC_PATH",
+      "value": "/"
     },
     {
-      "name": "CHILL_DYNAMIC_EXAMPLE_PORT",
-      "value": "5001"
-    },
-    {
-      "name": "CHILL_DYNAMIC_EXAMPLE_SCHEME",
+      "name": "CHILL_DYNAMIC_SCHEME",
       "value": "http"
     },
     {
-      "name": "CHILL_DYNAMIC_EXAMPLE_HOST",
-      "value": "$SLUGNAME-chill-dynamic-example-$PROJECT_NAME_HASH",
-      "cmd": "printf '%s' '$SLUGNAME-chill-dynamic-example-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
+      "name": "CHILL_DYNAMIC_HOST",
+      "value": "",
+      "cmd": "printf '%s' '$SLUGNAME-chillstatic-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
     },
     {
-      "name": "CHILL_DYNAMIC_EXAMPLE_HOST__chillbox",
+      "name": "CHILL_DYNAMIC_HOST__chillbox",
       "value": "localhost"
+    },
+    {
+      "name": "CHILL_DYNAMIC_PORT",
+      "value": "5001"
     },
     {
       "name": "API_PATH",
@@ -74,7 +74,7 @@
     },
     {
       "name": "API_HOST",
-      "value": "$SLUGNAME-api-$PROJECT_NAME_HASH",
+      "value": "",
       "cmd": "printf '%s' '$SLUGNAME-api-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
     },
     {
@@ -91,7 +91,7 @@
     },
     {
       "name": "IMMUTABLE_EXAMPLE_HOST",
-      "value": "$SLUGNAME-immutable-example-$PROJECT_NAME_HASH",
+      "value": "",
       "cmd": "printf '%s' '$SLUGNAME-immutable-example-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
     },
     {
@@ -112,6 +112,96 @@
       "cmd": "make --silent --directory=immutable-example --no-print-directory inspect.HASH"
     },
     {
+      "name": "DESIGN_TOKENS_PORT",
+      "value": "8086"
+    },
+    {
+      "name": "DESIGN_TOKENS_PATH",
+      "value": "/design-tokens/v1/$DESIGN_TOKENS_HASH/"
+    },
+    {
+      "name": "DESIGN_TOKENS_HOST",
+      "value": "",
+      "cmd": "printf '%s' \"$SLUGNAME-design-tokens-$PROJECT_NAME_HASH\" | grep -o -E '^.{0,63}'"
+    },
+    {
+      "name": "DESIGN_TOKENS_HOST__chillbox",
+      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME"
+    },
+    {
+      "name": "DESIGN_TOKENS_URL",
+      "value": "http://$DESIGN_TOKENS_HOST:$DESIGN_TOKENS_PORT/"
+    },
+    {
+      "name": "DESIGN_TOKENS_URL__chillbox",
+      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME/$SLUGNAME/immutable/design-tokens/$DESIGN_TOKENS_HASH/"
+    },
+    {
+      "name": "DESIGN_TOKENS_HASH",
+      "value": "replaced-with-cmd-to-get-hash",
+      "cmd": "make --silent --directory=design-tokens/ --no-print-directory inspect.HASH"
+    },
+    {
+      "name": "CLIENT_SIDE_PUBLIC_PORT",
+      "value": "8082"
+    },
+    {
+      "name": "CLIENT_SIDE_PUBLIC_PATH",
+      "value": "/theme/$CLIENT_SIDE_PUBLIC_HASH/"
+    },
+    {
+      "name": "CLIENT_SIDE_PUBLIC_HOST",
+      "value": "",
+      "cmd": "printf '%s' \"$SLUGNAME-client-side-public-$PROJECT_NAME_HASH\" | grep -o -E '^.{0,63}'"
+    },
+    {
+      "name": "CLIENT_SIDE_PUBLIC_HOST__chillbox",
+      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME"
+    },
+    {
+      "name": "CLIENT_SIDE_PUBLIC_URL",
+      "value": "http://$CLIENT_SIDE_PUBLIC_HOST:$CLIENT_SIDE_PUBLIC_PORT/"
+    },
+    {
+      "name": "CLIENT_SIDE_PUBLIC_URL__chillbox",
+      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME/$SLUGNAME/immutable/client-side-public/$CLIENT_SIDE_PUBLIC_HASH/"
+    },
+    {
+      "name": "CLIENT_SIDE_PUBLIC_HASH",
+      "value": "replaced-with-cmd-to-get-hash",
+      "cmd": "make --silent --directory=client-side-public/ --no-print-directory inspect.HASH"
+    },
+    {
+      "name": "SOURCE_MEDIA_PORT",
+      "value": "8087"
+    },
+    {
+      "name": "SOURCE_MEDIA_PATH",
+      "value": "/media/"
+    },
+    {
+      "name": "SOURCE_MEDIA_HOST",
+      "value": "",
+      "cmd": "printf '%s' \"$SLUGNAME-source-media-$PROJECT_NAME_HASH\" | grep -o -E '^.{0,63}'"
+    },
+    {
+      "name": "SOURCE_MEDIA_HOST__chillbox",
+      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME"
+    },
+    {
+      "name": "SOURCE_MEDIA_URL",
+      "value": "http://$SOURCE_MEDIA_HOST:$SOURCE_MEDIA_PORT/"
+    },
+    {
+      "name": "SOURCE_MEDIA_URL__chillbox",
+      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME/$SLUGNAME/immutable/source-media/$SOURCE_MEDIA_HASH/"
+    },
+    {
+      "name": "SOURCE_MEDIA_HASH",
+      "value": "replaced-with-cmd-to-get-hash",
+      "cmd": "make --silent --directory=source-media/ --no-print-directory inspect.HASH"
+    },
+    {
       "name": "PROXY_CACHE_VALID__chillbox",
       "value": "1y"
     },
@@ -124,6 +214,39 @@
     "13 5 * * 6 echo 'do something'"
   ],
   "services": [
+    {
+      "name": "design-tokens",
+      "lang": "immutable",
+      "handler": "design-tokens",
+      "environment": [
+        {
+          "name": "HOST",
+          "value": "$DESIGN_TOKENS_HOST"
+        }
+      ]
+    },
+    {
+      "name": "client-side-public",
+      "lang": "immutable",
+      "handler": "client-side-public",
+      "environment": [
+        {
+          "name": "HOST",
+          "value": "$CLIENT_SIDE_PUBLIC_HOST"
+        }
+      ]
+    },
+    {
+      "name": "source-media",
+      "lang": "immutable",
+      "handler": "source-media",
+      "environment": [
+        {
+          "name": "HOST",
+          "value": "$SOURCE_MEDIA_HOST"
+        }
+      ]
+    },
     {
       "name": "immutable-example",
       "lang": "immutable",
@@ -160,7 +283,7 @@
     {
       "name": "chillstatic",
       "lang": "chill",
-      "handler": "chill-static-example",
+      "handler": "chill-static",
       "manifest": "MANIFEST",
       "environment": [
         {
@@ -169,7 +292,7 @@
         },
         {
           "name": "HOST",
-          "value": "$CHILL_STATIC_EXAMPLE_HOST"
+          "value": "$CHILL_STATIC_HOST"
         },
         {
           "name": "CHILL_HOST",
@@ -177,14 +300,14 @@
         },
         {
           "name": "CHILL_PORT",
-          "value": "$CHILL_STATIC_EXAMPLE_PORT"
+          "value": "$CHILL_STATIC_PORT"
         }
       ]
     },
     {
       "name": "chilldynamic",
       "lang": "chill",
-      "handler": "chill-dynamic-example",
+      "handler": "chill-dynamic",
       "manifest": "MANIFEST",
       "environment": [
         {
@@ -193,7 +316,7 @@
         },
         {
           "name": "HOST",
-          "value": "$CHILL_DYNAMIC_EXAMPLE_HOST"
+          "value": "$CHILL_DYNAMIC_HOST"
         },
         {
           "name": "CHILL_HOST",
@@ -201,11 +324,11 @@
         },
         {
           "name": "CHILL_PORT",
-          "value": "$CHILL_DYNAMIC_EXAMPLE_PORT"
+          "value": "$CHILL_DYNAMIC_PORT"
         },
         {
           "name": "CHILL_PUBLIC_URL_PREFIX",
-          "value": "$CHILL_DYNAMIC_EXAMPLE_PATH"
+          "value": "$CHILL_DYNAMIC_PATH"
         }
       ]
     }
