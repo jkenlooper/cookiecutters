@@ -259,6 +259,8 @@ for service_json_obj in "$@"; do
         --name "$container_name" \
         --network chillboxnet \
         --env-file "$site_env_vars_file" \
+        -e CHILL_HOST=0.0.0.0 \
+        -e CHILL_PORT \
         --mount "type=volume,src=$container_name,dst=/var/lib/chill/sqlite3" \
         --mount "type=bind,src=$project_dir/$service_handler/documents,dst=/home/chill/app/documents" \
         --mount "type=bind,src=$project_dir/$service_handler/queries,dst=/home/chill/app/queries" \
