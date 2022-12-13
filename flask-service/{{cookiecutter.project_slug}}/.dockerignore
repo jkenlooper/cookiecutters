@@ -6,3 +6,5 @@
 !/setup.py
 !/src/*
 !/README.md
+!/secrets.sh
+!/tests/*

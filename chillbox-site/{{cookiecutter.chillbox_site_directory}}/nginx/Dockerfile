@@ -12,7 +12,7 @@ ENV CHILLBOX_SERVER_NAME=chillbox.test
 ENV CHILLBOX_SERVER_PORT=80
 ENV S3_ENDPOINT_URL=http://chillbox-minio:9000
 ENV IMMUTABLE_BUCKET_NAME=chillboximmutable
-ENV IMMUTABLE_BUCKET_DOMAIN_NAME=http://chillbox-minio:9000
+ENV IMMUTABLE_BUCKET_DOMAIN_NAME=chillbox-minio:9000
 ENV ARTIFACT_BUCKET_NAME=chillboxartifact
 ENV SLUGNAME={{ cookiecutter.slugname }}
 ENV VERSION=0
@@ -125,7 +125,7 @@ fallback_nginx_conf() {
     fi
   fi
   printf "\n\n########\n%s\n########\n\n" "Start /etc/nginx/conf.d/$nginx_conf.failed"
-  cat  "/etc/nginx/conf.d/$nginx_conf.failed"
+  cat -n "/etc/nginx/conf.d/$nginx_conf.failed"
   printf "\n\n########\n%s\n########\n\n" "End /etc/nginx/conf.d/$nginx_conf.failed"
 }
 
