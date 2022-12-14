@@ -37,11 +37,11 @@
     },
     {
       "name": "CHILL_STATIC_PORT",
-      "value": "5000"
+      "value": "38001"
     },
     {
       "name": "CHILL_DYNAMIC_PATH",
-      "value": "/"
+      "value": "/dynamic/"
     },
     {
       "name": "CHILL_DYNAMIC_SCHEME",
@@ -58,7 +58,7 @@
     },
     {
       "name": "CHILL_DYNAMIC_PORT",
-      "value": "5001"
+      "value": "38002"
     },
     {
       "name": "API_PATH",
@@ -66,7 +66,7 @@
     },
     {
       "name": "API_PORT",
-      "value": "8084"
+      "value": "38003"
     },
     {
       "name": "API_SCHEME",
@@ -83,7 +83,7 @@
     },
     {
       "name": "IMMUTABLE_EXAMPLE_PORT",
-      "value": "8080"
+      "value": "38004"
     },
     {
       "name": "IMMUTABLE_EXAMPLE_PATH",
@@ -113,7 +113,7 @@
     },
     {
       "name": "DESIGN_TOKENS_PORT",
-      "value": "8086"
+      "value": "38005"
     },
     {
       "name": "DESIGN_TOKENS_PATH",
@@ -143,7 +143,7 @@
     },
     {
       "name": "CLIENT_SIDE_PUBLIC_PORT",
-      "value": "8082"
+      "value": "38006"
     },
     {
       "name": "CLIENT_SIDE_PUBLIC_PATH",
@@ -173,7 +173,7 @@
     },
     {
       "name": "SOURCE_MEDIA_PORT",
-      "value": "8087"
+      "value": "38007"
     },
     {
       "name": "SOURCE_MEDIA_PATH",

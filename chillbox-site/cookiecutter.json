@@ -2,7 +2,7 @@
 
   "slugname": "llama",
   "chillbox_site_directory": ".",
-  "local_app_port": "8080",
+  "local_app_port": "38000",
   "_version": "0.0.1-alpha.1",
   "_repo": "https://github.com/jkenlooper/cookiecutters",
   "_directory": "chillbox-site",
