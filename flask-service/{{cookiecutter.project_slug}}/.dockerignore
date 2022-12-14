@@ -1,3 +1,5 @@
+# {{ cookiecutter.template_file_comment }}
+
 *
 !/MANIFEST.in
 !/pyproject.toml

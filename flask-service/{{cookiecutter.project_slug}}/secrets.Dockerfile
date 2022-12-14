@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1.4.3
 
+# {{ cookiecutter.template_file_comment }}
+
 # UPKEEP due: "2023-01-10" label: "Alpine Linux base image" interval: "+3 months"
 # docker pull alpine:3.16.2
 # docker image ls --digests alpine

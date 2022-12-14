@@ -263,7 +263,7 @@
       "lang": "flask",
       "handler": "api",
       "secrets_config": "api.secrets.cfg",
-      "secrets_export_dockerfile": "api.secrets.Dockerfile",
+      "secrets_export_dockerfile": "secrets.Dockerfile",
       "manifest": "MANIFEST",
       "environment": [
         {
