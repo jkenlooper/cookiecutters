@@ -8,7 +8,7 @@ from {{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}.app import crea
 
 
 def main():
-    ""
+    """"""
     from gevent import pywsgi, signal_handler
     import signal
 

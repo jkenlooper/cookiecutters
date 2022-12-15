@@ -190,10 +190,12 @@ for service_json_obj in "$@"; do
   service_handler=""
   service_lang=""
   service_name=""
+  secrets_config=""
   eval "$(echo "$service_json_obj" | jq -r '@sh "
     service_handler=\(.handler)
     service_lang=\(.lang)
     service_name=\(.name)
+    secrets_config=\(.secrets_config // "")
     "')"
   echo "$service_handler $service_name $service_lang"
   eval "$(echo "$service_json_obj" | jq -r '.environment // [] | .[] | "export " + .name + "=" + (.value | @sh)' \
@@ -222,8 +224,11 @@ for service_json_obj in "$@"; do
       ;;
 
     flask)
-      if [ ! -e "$not_encrypted_secrets_dir/$service_handler/$service_handler.secrets.cfg" ]; then
-        "$script_dir/local-secrets.sh" -s "$slugname" "$modified_site_json_file" || echo "Ignoring error from local-secrets.sh"
+      if [ -n "$secrets_config" ] && [ ! -s "$not_encrypted_secrets_dir/$service_handler/$secrets_config" ]; then
+        "$script_dir/local-secrets.sh" -s "$slugname" "$modified_site_json_file"
+      else
+        # Just create an empty file so the container mount works.
+        touch "$not_encrypted_secrets_dir/$service_handler/$secrets_config"
       fi
 
       printf '\n\n%s\n\n' "INFO $script_name: Starting $service_lang service: $container_name"
@@ -240,10 +245,10 @@ for service_json_obj in "$@"; do
         --env-file "$site_env_vars_file" \
         -e HOST="localhost" \
         -e PORT="$PORT" \
-        -e SECRETS_CONFIG="/var/lib/local-secrets/$slugname/$service_handler/$service_handler.secrets.cfg" \
+        -e SECRETS_CONFIG="/var/lib/local-secrets/$slugname/$service_handler/$secrets_config" \
         --network chillboxnet \
         --mount "type=bind,src=$project_dir/$service_handler/src/${slugname}_${service_handler},dst=/usr/local/src/app/src/${slugname}_${service_handler},readonly" \
-        --mount "type=bind,src=$not_encrypted_secrets_dir/$service_handler/$service_handler.secrets.cfg,dst=/var/lib/local-secrets/$slugname/$service_handler/$service_handler.secrets.cfg,readonly" \
+        --mount "type=bind,src=$not_encrypted_secrets_dir/$service_handler/$secrets_config,dst=/var/lib/local-secrets/$slugname/$service_handler/$secrets_config,readonly" \
         "$image_name" ./flask-run.sh
       set +x
       ;;
