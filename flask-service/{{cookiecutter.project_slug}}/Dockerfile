@@ -84,7 +84,7 @@ ENV SERVER_NAME="localhost"
 RUN <<FILEWATCH_SUPPORT
 # Create scripts for file watching.
 set -o errexit
-cat <<'SLEEP_SH' > sleep.sh
+cat <<'SLEEP_SH' > /usr/local/src/app/sleep.sh
 #!/usr/bin/env sh
 set -o errexit
 
@@ -96,30 +96,24 @@ done
 SLEEP_SH
 chmod +x sleep.sh
 
-cat <<'FLASK_RUN_SH' > flask-run.sh
+cat <<'FLASK_RUN_SH' > /usr/local/src/app/flask-run.sh
 #!/usr/bin/env sh
 
 set -o errexit
 
-current_user="$(id -un)"
-echo "current user = $current_user or $USER"
-if [ "${current_user}" != "root" ]; then
-  echo "ERROR: Must run $0 as the 'root' user because this uses bind mount of the src/{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}/ directory."
-  exit 1
-fi
-
 flask init-db
 
 # Setting host to 0.0.0.0 (externally visible) to work with docker network.
-flask run \
-  --port "$API_PORT" \
-  --host "0.0.0.0"
-
-# pytest
-
-# coverage run -m pytest
-
-# coverage report
+gunicorn \
+    --reload \
+    --name {{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}_app \
+    --workers 2 \
+    --worker-class gevent \
+    --max-requests 50 \
+    --max-requests-jitter 10 \
+    --log-level debug \
+    --bind "0.0.0.0:$API_PORT" \
+    "{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}.app:create_app()"
 
 FLASK_RUN_SH
 
@@ -128,4 +122,4 @@ FILEWATCH_SUPPORT
 
 USER dev
 
-CMD ["/usr/local/src/app/.venv/bin/start"]
+CMD ["/usr/local/src/app/flask-run.sh"]

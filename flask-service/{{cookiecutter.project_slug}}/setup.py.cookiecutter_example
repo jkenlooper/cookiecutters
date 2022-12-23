@@ -26,9 +26,4 @@ setup(
         # 'dev': ['check-manifest'],
         "test": ["pytest", "coverage"],
     },
-    entry_points={
-        "console_scripts": [
-            "start={{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}.script:main",
-        ]
-    },
 )
