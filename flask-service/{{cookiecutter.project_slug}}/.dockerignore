@@ -1,12 +1,11 @@
 # {{ cookiecutter.template_file_comment }}
 
 *
-!/MANIFEST.in
-!/pyproject.toml
 !/requirements.txt
-!/setup.cfg
 !/setup.py
 !/src/*
 !/README.md
 !/secrets.sh
 !/tests/*
+!/lib/*
+!/dist/python/*

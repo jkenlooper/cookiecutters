@@ -19,8 +19,8 @@ setup(
     python_requires=">=3.8, <4",
     zip_safe=False,
     install_requires=[
-        "flask",
-        "gevent",
+        "flask>=2.2",
+        "gunicorn[gevent,setproctitle]>=20.0",
     ],
     extras_require={  # Optional
         # 'dev': ['check-manifest'],

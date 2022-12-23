@@ -64,7 +64,7 @@ mkdir -p "$SERVICE_PERSISTENT_DIR"
 
 # Allow the prompt for secrets to be customizable depending on the service.
 touch "$TMPFS_DIR/secrets/$SECRETS_CONFIG"
-/usr/local/src/secrets/secrets.sh "$TMPFS_DIR/secrets/$SECRETS_CONFIG"
+/usr/local/src/secrets/secrets.sh "$TMPFS_DIR/secrets/$SECRETS_CONFIG" || (echo "WARNING $0: Ignoring error with secrets.sh")
 
 cleanup() {
 	shred -fu "$TMPFS_DIR/secrets/$SECRETS_CONFIG" || rm -f "$TMPFS_DIR/secrets/$SECRETS_CONFIG"

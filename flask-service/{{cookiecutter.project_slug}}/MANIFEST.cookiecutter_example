@@ -1,7 +1,5 @@
-MANIFEST.in
-pyproject.toml
 README.md
 requirements.txt
-setup.cfg
+dist/python
 setup.py
 src

@@ -7,7 +7,7 @@
   "_repo": "https://github.com/jkenlooper/cookiecutters",
   "_directory": "flask-service",
   "template_file_comment": "This file in the parent directory {{ cookiecutter.project_slug }} was generated from the {{ cookiecutter._directory }} directory in {{ cookiecutter._repo }} . Any modifications needed to this file should be done on that originating file.",
-  "_read_only": ".dockerignore Dockerfile secrets.Dockerfile",
+  "_read_only": ".dockerignore Dockerfile secrets.Dockerfile lib/install-chillbox-packages.sh verify.Dockerfile verify.sh",
   "_copy_without_render": [
   ]
 }
