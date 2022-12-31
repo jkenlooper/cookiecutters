@@ -23,7 +23,7 @@ server {
 
     add_header Cache-Control "public,no-cache";
 
-    root /usr/local/src/${SLUGNAME}/chill/frozen;
+    root /usr/local/src/${SLUGNAME}/chill-static/frozen;
     # The last try_files parameter is either '=404' or '@chillstatic'.
     try_files $uri $uri/index.html ${CHILL_STATIC_TRY_FILES_LAST_PARAM};
 
@@ -37,8 +37,6 @@ server {
   }
 
   location ${CHILL_DYNAMIC_PATH} {
-    # The URL used here does not end with a slash; the location that was matched
-    # is passed to the proxy.
     proxy_pass ${CHILL_DYNAMIC_SCHEME}://${CHILL_DYNAMIC_HOST}:$CHILL_DYNAMIC_PORT;
   }
 

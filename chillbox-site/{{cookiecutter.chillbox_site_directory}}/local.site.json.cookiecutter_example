@@ -28,7 +28,7 @@
     },
     {
       "name": "CHILL_STATIC_HOST",
-      "value": "",
+      "value": "$SLUGNAME-chillstatic-$PROJECT_NAME_HASH",
       "cmd": "printf '%s' '$SLUGNAME-chillstatic-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
     },
     {
@@ -44,21 +44,21 @@
       "value": "/dynamic/"
     },
     {
+      "name": "CHILL_DYNAMIC_PORT",
+      "value": "38002"
+    },
+    {
       "name": "CHILL_DYNAMIC_SCHEME",
       "value": "http"
     },
     {
       "name": "CHILL_DYNAMIC_HOST",
-      "value": "",
-      "cmd": "printf '%s' '$SLUGNAME-chillstatic-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
+      "value": "$SLUGNAME-chilldynamic-$PROJECT_NAME_HASH",
+      "cmd": "printf '%s' '$SLUGNAME-chilldynamic-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
     },
     {
       "name": "CHILL_DYNAMIC_HOST__chillbox",
       "value": "localhost"
-    },
-    {
-      "name": "CHILL_DYNAMIC_PORT",
-      "value": "38002"
     },
     {
       "name": "API_PATH",
@@ -74,7 +74,7 @@
     },
     {
       "name": "API_HOST",
-      "value": "",
+      "value": "$SLUGNAME-api-$PROJECT_NAME_HASH",
       "cmd": "printf '%s' '$SLUGNAME-api-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
     },
     {
@@ -91,7 +91,7 @@
     },
     {
       "name": "IMMUTABLE_EXAMPLE_HOST",
-      "value": "",
+      "value": "$SLUGNAME-immutable-example-$PROJECT_NAME_HASH",
       "cmd": "printf '%s' '$SLUGNAME-immutable-example-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
     },
     {
@@ -260,10 +260,16 @@
     },
     {
       "name": "api",
-      "lang": "flask",
+      "lang": "python",
       "handler": "api",
       "secrets_config": "api.secrets.cfg",
       "secrets_export_dockerfile": "secrets.Dockerfile",
+      "niceness": 10,
+      "worker_class": "gevent",
+      "workers": 2,
+      "max_requests": 50,
+      "max_requests_jitter": 11,
+      "log_level": "debug",
       "manifest": "MANIFEST",
       "environment": [
         {
@@ -277,6 +283,14 @@
         {
           "name": "FLASK_APP",
           "value": "site1_api.app"
+        },
+        {
+          "name": "FLASK_DEBUG",
+          "value": "true"
+        },
+        {
+          "name": "FLASK_INSTANCE_PATH",
+          "value": "/var/lib/$SLUGNAME/api"
         }
       ]
     },
@@ -296,7 +310,7 @@
         },
         {
           "name": "CHILL_HOST",
-          "value": "localhost"
+          "value": "0.0.0.0"
         },
         {
           "name": "CHILL_PORT",
@@ -320,7 +334,7 @@
         },
         {
           "name": "CHILL_HOST",
-          "value": "localhost"
+          "value": "0.0.0.0"
         },
         {
           "name": "CHILL_PORT",

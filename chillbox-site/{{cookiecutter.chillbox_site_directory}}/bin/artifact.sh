@@ -57,7 +57,9 @@ create_archive() {
     mkdir -p "$tmpdir/$slugname/$service_name"
     manifest_files="$(cat "$directory_full_path/$service_manifest")"
     for item in $manifest_files; do
-      cp -R "$directory_full_path/$item" "$tmpdir/$slugname/$service_name/"
+      item_dir="$(dirname "$tmpdir/$slugname/$service_name/$item")"
+      mkdir -p "$item_dir"
+      cp -R "$directory_full_path/$item" "$item_dir/"
     done
   done
 
