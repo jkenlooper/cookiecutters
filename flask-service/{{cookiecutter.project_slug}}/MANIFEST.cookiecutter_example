@@ -1,5 +1,8 @@
 README.md
 requirements.txt
-dist/python
 setup.py
+dep
 src
+secrets.sh
+secrets.Dockerfile
+gunicorn.conf.py

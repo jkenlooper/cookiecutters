@@ -14,12 +14,28 @@ DEV_USER
 
 WORKDIR /usr/local/src/app/
 
-COPY lib/install-chillbox-packages.sh /home/dev/install-chillbox-packages.sh
+# UPKEEP due: "2023-03-23" label: "Chillbox cli shared scripts" interval: "+3 months"
+# https://github.com/jkenlooper/chillbox
+ARG CHILLBOX_CLI_VERSION="0.0.1-beta.30"
+RUN <<CHILLBOX_PACKAGES
+# Download and extract shared scripts from chillbox.
+set -o errexit
+# The /etc/chillbox/bin/ directory is a hint that the
+# install-chillbox-packages.sh script is the same one that chillbox uses.
+mkdir -p /etc/chillbox/bin
+tmp_tar_gz="$(mktemp)"
+wget -q -O "$tmp_tar_gz" \
+  "https://github.com/jkenlooper/chillbox/releases/download/$CHILLBOX_CLI_VERSION/chillbox-cli.tar.gz"
+tar x -f "$tmp_tar_gz" -z -C /etc/chillbox/bin --strip-components 4 ./src/chillbox/bin/install-chillbox-packages.sh
+chown root:root /etc/chillbox/bin/install-chillbox-packages.sh
+rm -f "$tmp_tar_gz"
+CHILLBOX_PACKAGES
+
 RUN <<SERVICE_DEPENDENCIES
 set -o errexit
 
 apk update
-"/home/dev/install-chillbox-packages.sh"
+/etc/chillbox/bin/install-chillbox-packages.sh
 
 ln -s /usr/bin/python3 /usr/bin/python
 SERVICE_DEPENDENCIES
@@ -37,6 +53,20 @@ PYTHON_VIRTUALENV
 ENV VIRTUAL_ENV=/usr/local/src/app/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
+# UPKEEP due: "2023-03-23" label: "Python pip" interval: "+3 months"
+# https://pypi.org/project/pip/
+ARG PIP_VERSION=22.3.1
+# UPKEEP due: "2023-03-23" label: "Python wheel" interval: "+3 months"
+# https://pypi.org/project/wheel/
+ARG WHEEL_VERSION=0.38.4
+RUN <<PIP_INSTALL
+# Install pip and wheel
+set -o errexit
+python -m pip install \
+    "pip==$PIP_VERSION" \
+    "wheel==$WHEEL_VERSION"
+PIP_INSTALL
+
 ARG FLASK_INSTANCE_PATH=/var/lib/{{ cookiecutter.slugname }}/
 ENV FLASK_INSTANCE_PATH=$FLASK_INSTANCE_PATH
 RUN <<FLASK_SETUP
@@ -49,15 +79,14 @@ mkdir -p /usr/local/src/app
 chown -R dev:dev /usr/local/src/app
 FLASK_SETUP
 
-ARG LOCAL_PYTHON_PACKAGES=/var/lib/chillbox/python
-ENV LOCAL_PYTHON_PACKAGES=$LOCAL_PYTHON_PACKAGES
-
-# The dist/python directory should include the wheels and other source packages
+# The dep directory should include the wheels and other source packages
 # created from running the verify.sh script.
-COPY dist/python $LOCAL_PYTHON_PACKAGES
+COPY dep /usr/local/src/app/dep
 
+COPY requirements.txt /usr/local/src/app/requirements.txt
 COPY setup.py /usr/local/src/app/setup.py
 COPY README.md /usr/local/src/app/README.md
+COPY gunicorn.conf.py /usr/local/src/app/gunicorn.conf.py
 COPY src /usr/local/src/app/src
 RUN <<PIP_INSTALL_APP
 # Install app in editable mode and use the local python packages.
@@ -67,7 +96,14 @@ set -o errexit
 # This uses the setup.py instead of the requirements.txt since this is for
 # development.
 pip install --disable-pip-version-check --compile \
-    --no-index --find-links="$LOCAL_PYTHON_PACKAGES" \
+    --no-index \
+    --find-links /var/lib/chillbox/python \
+    gunicorn[gevent,setproctitle]
+pip install --disable-pip-version-check --compile \
+    --no-index \
+    -r /usr/local/src/app/requirements.txt
+pip install --disable-pip-version-check --compile \
+    --no-index \
     -e /usr/local/src/app
 PIP_INSTALL_APP
 
@@ -96,15 +132,17 @@ done
 SLEEP_SH
 chmod +x sleep.sh
 
-cat <<'FLASK_RUN_SH' > /usr/local/src/app/flask-run.sh
+cat <<'RELOADER_SH' > /usr/local/src/app/reloader.sh
 #!/usr/bin/env sh
 
 set -o errexit
 
-flask init-db
-
 # Setting host to 0.0.0.0 (externally visible) to work with docker network.
+# The gunicorn command will use gunicorn.conf.py if it is in the same directory
+# by default. Setting it explicitly here to help show how it is being used.
 gunicorn \
+    --config ./gunicorn.conf.py \
+    --chdir /usr/local/src/app \
     --reload \
     --name {{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}_app \
     --workers 2 \
@@ -112,14 +150,15 @@ gunicorn \
     --max-requests 50 \
     --max-requests-jitter 10 \
     --log-level debug \
-    --bind "0.0.0.0:$API_PORT" \
+    --access-logfile - \
+    --bind "0.0.0.0:$PORT" \
     "{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}.app:create_app()"
 
-FLASK_RUN_SH
+RELOADER_SH
 
-chmod +x flask-run.sh
+chmod +x reloader.sh
 FILEWATCH_SUPPORT
 
 USER dev
 
-CMD ["/usr/local/src/app/flask-run.sh"]
+CMD ["/usr/local/src/app/reloader.sh"]

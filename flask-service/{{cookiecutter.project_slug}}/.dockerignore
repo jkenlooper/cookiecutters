@@ -7,5 +7,5 @@
 !/README.md
 !/secrets.sh
 !/tests/*
-!/lib/*
-!/dist/python/*
+!/dep/*
+!/gunicorn.conf.py

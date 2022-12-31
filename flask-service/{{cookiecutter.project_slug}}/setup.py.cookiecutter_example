@@ -20,7 +20,6 @@ setup(
     zip_safe=False,
     install_requires=[
         "flask>=2.2",
-        "gunicorn[gevent,setproctitle]>=20.0",
     ],
     extras_require={  # Optional
         # 'dev': ['check-manifest'],

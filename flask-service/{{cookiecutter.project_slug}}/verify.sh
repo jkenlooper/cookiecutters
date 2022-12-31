@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+# {{ cookiecutter.template_file_comment }}
+
 set -o errexit
 
 
@@ -42,13 +44,12 @@ while getopts "hi" OPTION ; do
 done
 shift $((OPTIND - 1))
 
-LOCAL_PYTHON_PACKAGES=/var/lib/chillbox/python
+mkdir -p "$script_dir/dep"
 image_name="verify-$name_hash"
 docker image rm "$image_name" > /dev/null 2>&1 || printf ""
 DOCKER_BUILDKIT=1 docker build \
   -t "$image_name" \
   -f "$script_dir/verify.Dockerfile" \
-  --build-arg LOCAL_PYTHON_PACKAGES="$LOCAL_PYTHON_PACKAGES" \
   "$script_dir"
 
 container_name="verify-$name_hash"
@@ -65,7 +66,6 @@ else
 fi
 
 docker cp "$container_name:/home/dev/app/requirements.txt" "$script_dir/requirements.txt"
-mkdir -p dist/python
-docker cp "$container_name:$LOCAL_PYTHON_PACKAGES/." "$script_dir/dist/python/"
+docker cp "$container_name:/home/dev/app/dep/." "$script_dir/dep/"
 docker stop --time 0 "$container_name" > /dev/null 2>&1 || printf ""
 docker rm "$container_name" > /dev/null 2>&1 || printf ""

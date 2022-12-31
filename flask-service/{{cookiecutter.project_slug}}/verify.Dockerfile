@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1.4.3
 
+# {{ cookiecutter.template_file_comment }}
+
 # UPKEEP due: "2023-01-10" label: "Alpine Linux base image" interval: "+3 months"
 # docker pull alpine:3.16.2
 # docker image ls --digests alpine
@@ -12,12 +14,28 @@ DEV_USER
 
 WORKDIR /home/dev/app
 
-COPY lib/install-chillbox-packages.sh /home/dev/install-chillbox-packages.sh
+# UPKEEP due: "2023-03-23" label: "Chillbox cli shared scripts" interval: "+3 months"
+# https://github.com/jkenlooper/chillbox
+ARG CHILLBOX_CLI_VERSION="0.0.1-beta.30"
+RUN <<CHILLBOX_PACKAGES
+# Download and extract shared scripts from chillbox.
+set -o errexit
+# The /etc/chillbox/bin/ directory is a hint that the
+# install-chillbox-packages.sh script is the same one that chillbox uses.
+mkdir -p /etc/chillbox/bin
+tmp_tar_gz="$(mktemp)"
+wget -q -O "$tmp_tar_gz" \
+  "https://github.com/jkenlooper/chillbox/releases/download/$CHILLBOX_CLI_VERSION/chillbox-cli.tar.gz"
+tar x -f "$tmp_tar_gz" -z -C /etc/chillbox/bin --strip-components 4 ./src/chillbox/bin/install-chillbox-packages.sh
+chown root:root /etc/chillbox/bin/install-chillbox-packages.sh
+rm -f "$tmp_tar_gz"
+CHILLBOX_PACKAGES
+
 RUN <<SERVICE_DEPENDENCIES
 set -o errexit
 
 apk update
-"/home/dev/install-chillbox-packages.sh"
+/etc/chillbox/bin/install-chillbox-packages.sh
 
 ln -s /usr/bin/python3 /usr/bin/python
 SERVICE_DEPENDENCIES
@@ -35,6 +53,46 @@ PYTHON_VIRTUALENV
 ENV VIRTUAL_ENV=/home/dev/app/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
+# UPKEEP due: "2023-03-23" label: "Python pip" interval: "+3 months"
+# https://pypi.org/project/pip/
+ARG PIP_VERSION=22.3.1
+# UPKEEP due: "2023-03-23" label: "Python wheel" interval: "+3 months"
+# https://pypi.org/project/wheel/
+ARG WHEEL_VERSION=0.38.4
+RUN <<PIP_INSTALL
+# Install pip and wheel
+set -o errexit
+python -m pip install \
+    "pip==$PIP_VERSION" \
+    "wheel==$WHEEL_VERSION"
+PIP_INSTALL
+
+# UPKEEP due: "2023-03-23" label: "pip-tools" interval: "+3 months"
+# https://pypi.org/project/pip-tools/
+ARG PIP_TOOLS_VERSION=6.12.1
+RUN <<PIP_TOOLS_INSTALL
+# Install pip-tools
+set -o errexit
+python -m pip install pip-tools=="$PIP_TOOLS_VERSION"
+PIP_TOOLS_INSTALL
+
+# UPKEEP due: "2023-03-23" label: "Python auditing tool pip-audit" interval: "+3 months"
+# https://pypi.org/project/pip-audit/
+ARG PIP_AUDIT_VERSION=2.4.10
+RUN <<INSTALL_PIP_AUDIT
+# Audit packages for known vulnerabilities
+set -o errexit
+python -m pip install "pip-audit==$PIP_AUDIT_VERSION"
+INSTALL_PIP_AUDIT
+
+# UPKEEP due: "2023-06-23" label: "Python security linter tool: bandit" interval: "+6 months"
+# https://pypi.org/project/bandit/
+ARG BANDIT_VERSION=1.7.4
+RUN <<BANDIT_INSTALL
+# Install bandit to find common security issues
+set -o errexit
+python -m pip install "bandit==$BANDIT_VERSION"
+BANDIT_INSTALL
 
 RUN <<SETUP
 set -o errexit
@@ -50,85 +108,57 @@ chmod +x /home/dev/sleep.sh
 chown -R dev:dev /home/dev/app
 SETUP
 
-ARG LOCAL_PYTHON_PACKAGES=/var/lib/chillbox/python
-ENV LOCAL_PYTHON_PACKAGES=$LOCAL_PYTHON_PACKAGES
-
 COPY --chown=dev:dev setup.py /home/dev/app/setup.py
 COPY --chown=dev:dev README.md /home/dev/app/README.md
+COPY --chown=dev:dev dep /home/dev/app/dep
 # Only the __init__.py is needed when using pip download.
 COPY --chown=dev:dev src/{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}/__init__.py /home/dev/app/src/{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}/__init__.py
 
-# UPKEEP due: "2023-03-23" label: "Python pip" interval: "+3 months"
-# https://pypi.org/project/pip/
-ARG PIP_VERSION=22.3.1
-# UPKEEP due: "2023-03-23" label: "Python wheel" interval: "+3 months"
-# https://pypi.org/project/wheel/
-ARG WHEEL_VERSION=0.38.4
 RUN <<PIP_INSTALL_REQ
 # Download python packages described in setup.py
 set -o errexit
-mkdir -p "$LOCAL_PYTHON_PACKAGES"
-python -m pip download \
-    --destination-directory "$LOCAL_PYTHON_PACKAGES" \
-    "pip==$PIP_VERSION" \
-    "wheel==$WHEEL_VERSION"
+mkdir -p "/home/dev/app/dep"
+# Change to the app directory so the find-links can be relative.
+cd /home/dev/app
 python -m pip download --disable-pip-version-check \
-    --destination-directory "$LOCAL_PYTHON_PACKAGES" \
-    /home/dev/app
+    --exists-action i \
+    --destination-directory "./dep" \
+    .
 PIP_INSTALL_REQ
 
 USER dev
 
-# UPKEEP due: "2023-03-23" label: "pip-tools" interval: "+3 months"
-# https://pypi.org/project/pip-tools/
-ARG PIP_TOOLS_VERSION=6.12.1
-RUN <<PIP_TOOLS_INSTALL
-# Install pip-tools
-set -o errexit
-python -m pip install pip-tools=="$PIP_TOOLS_VERSION"
-PIP_TOOLS_INSTALL
-
 RUN <<UPDATE_REQUIREMENTS
 # Generate the hashed requirements.txt file that the main container will use.
 set -o errexit
+# Change to the app directory so the find-links can be relative.
+cd /home/dev/app
 pip-compile --generate-hashes \
     --resolver=backtracking \
     --allow-unsafe \
-    --no-index --find-links="$LOCAL_PYTHON_PACKAGES" \
-    --output-file /home/dev/app/requirements.txt \
-    /home/dev/app/setup.py
+    --no-index --find-links="./dep" \
+    --output-file ./requirements.txt \
+    ./setup.py
 UPDATE_REQUIREMENTS
 
-
-# UPKEEP due: "2023-03-23" label: "Python auditing tool pip-audit" interval: "+3 months"
-# https://pypi.org/project/pip-audit/
-ARG PIP_AUDIT_VERSION=2.4.10
 RUN <<AUDIT
 # Audit packages for known vulnerabilities
 set -o errexit
-python -m pip install "pip-audit==$PIP_AUDIT_VERSION"
+# Change to the app directory so the find-links can be relative.
+cd /home/dev/app
 pip-audit \
     --require-hashes \
     --local \
     --strict \
     --vulnerability-service pypi \
-    -r /home/dev/app/requirements.txt
+    -r ./requirements.txt
 pip-audit \
     --require-hashes \
     --local \
     --strict \
     --vulnerability-service osv \
-    -r /home/dev/app/requirements.txt
+    -r ./requirements.txt
 AUDIT
-
-# UPKEEP due: "2023-06-23" label: "Python security linter tool: bandit" interval: "+6 months"
-# https://pypi.org/project/bandit/
-ARG BANDIT_VERSION=1.7.4
-RUN <<BANDIT_INSTALL
-# Install bandit to find common security issues
-set -o errexit
-python -m pip install "bandit==$BANDIT_VERSION"
-BANDIT_INSTALL
 
 COPY --chown=dev:dev src/{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}/ /home/dev/app/src/{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}/
 RUN <<BANDIT
