@@ -171,16 +171,7 @@ jq -r '.env // [] | .[] | .name + "=" + .value' "$modified_site_json_file" \
 # To stop the containers, it doesn't require using the modified json file.
 stop_and_rm_containers_silently "$slugname" "$project_name_hash" "$site_json_file"
 
-# TODO Run the local-s3 container?
-if [ -d "${project_dir}/local-s3" ]; then
-  chillbox_minio_state="$(docker inspect --format '{{ '{{.State.Running}}' }}' chillbox-minio || printf "false")"
-  chillbox_local_shared_secrets_state="$(docker inspect --format '{{ '{{.State.Running}}' }}' chillbox-local-shared-secrets || printf "false")"
-  if [ "${chillbox_minio_state}" = "true" ] && [ "${chillbox_local_shared_secrets_state}" = "true" ]; then
-    echo "chillbox local is running"
-  else
-    "${project_dir}/local-s3/local-chillbox.sh"
-  fi
-fi
+"$script_dir/local-s3.sh"
 
 services="$(jq -c '.services // [] | .[]' "$modified_site_json_file")"
 IFS="$(printf '\n ')" && IFS="${IFS% }"

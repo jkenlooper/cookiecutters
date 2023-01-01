@@ -168,12 +168,12 @@ chmod +x "$not_secure_key_dir/fake-encrypt-file"
 
 # Sleeper image needs no context.
 sleeper_image="$project_name_hash-sleeper"
-docker image rm "$sleeper_image" || printf ""
+docker image rm "$sleeper_image" > /dev/null 2>&1 || printf ""
 export DOCKER_BUILDKIT=1
 < "$project_dir/bin/sleeper.Dockerfile" \
   docker build \
     -t "$sleeper_image" \
-    -
+    - > /dev/null 2>&1
 
 version="0.0.0-local+$project_name_hash"
 
@@ -256,16 +256,18 @@ for service_json_obj in "$@"; do
       test "$docker_continue_confirm" = "y" || exit $exitcode
     )
 
+  docker stop --time 0 "$container_name-sleeper" > /dev/null 2>&1 || printf ""
+  docker rm "$container_name-sleeper" > /dev/null 2>&1 || printf ""
   docker run \
     -d \
     --name "$container_name-sleeper" \
     --mount "type=volume,src=dir-var-lib-$service_image_name,dst=$service_persistent_dir" \
-    "$sleeper_image" || (
+    "$sleeper_image" > /dev/null || (
       exitcode="$?"
       echo "docker exited with $exitcode exitcode. Ignoring"
     )
   docker cp "$container_name-sleeper:$service_persistent_dir/encrypted-secrets/." "$not_encrypted_secrets_dir/" || echo "Ignore docker cp error."
-  docker stop --time 0 "$container_name-sleeper" || printf ""
-  docker rm "$container_name-sleeper" || printf ""
+  docker stop --time 0 "$container_name-sleeper" > /dev/null 2>&1 || printf ""
+  docker rm "$container_name-sleeper" > /dev/null 2>&1 || printf ""
 
 done
