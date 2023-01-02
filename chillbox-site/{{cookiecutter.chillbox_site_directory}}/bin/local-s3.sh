@@ -154,8 +154,8 @@ docker run \
 # containers that may need to interact with the local chillbox minio s3 object
 # store.
 docker exec --user root "$container_name" mkdir -p "/var/lib/chillbox-local-shared/chillbox-minio/$slugname-local-s3"
+docker cp "$site_data_home/local-chillbox_object_storage-credentials" "$container_name":"/var/lib/chillbox-local-shared/chillbox-minio/$slugname-local-s3/local-chillbox_object_storage-credentials"
 docker exec --user root "$container_name" chmod -R 700 "/var/lib/chillbox-local-shared/chillbox-minio/$slugname-local-s3"
 docker exec --user root "$container_name" chown -R dev:dev "/var/lib/chillbox-local-shared/chillbox-minio/$slugname-local-s3"
-docker cp "$site_data_home/local-chillbox_object_storage-credentials" "$container_name":"/var/lib/chillbox-local-shared/chillbox-minio/$slugname-local-s3/local-chillbox_object_storage-credentials"
 docker stop --time 0 "$container_name" > /dev/null 2>&1 || printf ""
 docker rm "$container_name" > /dev/null 2>&1 || printf ""

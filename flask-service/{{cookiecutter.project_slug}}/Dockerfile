@@ -159,6 +159,20 @@ RELOADER_SH
 chmod +x reloader.sh
 FILEWATCH_SUPPORT
 
+RUN <<SUPPORT_LOCAL_S3
+# Create symbolic link for /home/dev/.aws/credentials
+set -o errexit
+
+# This credentials file will be replaced by a mount point.
+mkdir -p /var/lib/chillbox-local-shared/chillbox-minio/{{ cookiecutter.slugname }}-local-s3
+touch /var/lib/chillbox-local-shared/chillbox-minio/{{ cookiecutter.slugname }}-local-s3/local-chillbox_object_storage-credentials
+
+mkdir -p /home/dev/.aws
+ln -s /var/lib/chillbox-local-shared/chillbox-minio/{{ cookiecutter.slugname }}-local-s3/local-chillbox_object_storage-credentials /home/dev/.aws/credentials
+chmod 0600 /home/dev/.aws/credentials
+chown dev:dev /home/dev/.aws/credentials
+SUPPORT_LOCAL_S3
+
 USER dev
 
 CMD ["/usr/local/src/app/reloader.sh"]
