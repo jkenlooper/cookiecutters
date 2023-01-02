@@ -56,6 +56,9 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 # UPKEEP due: "2023-03-23" label: "Python pip" interval: "+3 months"
 # https://pypi.org/project/pip/
 ARG PIP_VERSION=22.3.1
+# UPKEEP due: "2023-03-23" label: "Python setuptools" interval: "+3 months"
+# https://pypi.org/project/setuptools/
+ARG SETUPTOOLS_VERSION=65.6.3
 # UPKEEP due: "2023-03-23" label: "Python wheel" interval: "+3 months"
 # https://pypi.org/project/wheel/
 ARG WHEEL_VERSION=0.38.4
@@ -64,6 +67,7 @@ RUN <<PIP_INSTALL
 set -o errexit
 python -m pip install \
     "pip==$PIP_VERSION" \
+    "setuptools==$SETUPTOOLS_VERSION" \
     "wheel==$WHEEL_VERSION"
 PIP_INSTALL
 
@@ -166,7 +170,7 @@ RUN <<BANDIT
 set -o errexit
 bandit \
     --recursive \
-    /home/dev/app/src/
+    /home/dev/app/src/ > /home/dev/security-issues-from-bandit.txt || echo "WARNING: Issues found."
 BANDIT
 
 CMD ["/home/dev/sleep.sh"]

@@ -20,6 +20,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "flask>=2.2",
+        "setuptools>=65.6.3",
     ],
     extras_require={  # Optional
         # 'dev': ['check-manifest'],

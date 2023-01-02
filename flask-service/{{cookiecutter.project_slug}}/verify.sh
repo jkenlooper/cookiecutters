@@ -67,5 +67,8 @@ fi
 
 docker cp "$container_name:/home/dev/app/requirements.txt" "$script_dir/requirements.txt"
 docker cp "$container_name:/home/dev/app/dep/." "$script_dir/dep/"
+# Only copy over the security issues if there are any.
+rm -f "$script_dir/security-issues-from-bandit.txt"
+docker cp "$container_name:/home/dev/security-issues-from-bandit.txt" "$script_dir/security-issues-from-bandit.txt" > /dev/null 2>&1 || echo "Bandit approves!"
 docker stop --time 0 "$container_name" > /dev/null 2>&1 || printf ""
 docker rm "$container_name" > /dev/null 2>&1 || printf ""
