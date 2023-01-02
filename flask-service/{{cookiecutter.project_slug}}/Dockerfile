@@ -109,6 +109,8 @@ PIP_INSTALL_APP
 
 ENV FLASK_APP={{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}.app
 ENV FLASK_DEBUG=false
+# Default to 1 worker and set worker-class to sync to match the default in chillbox.
+ENV GUNICORN_CMD_ARGS="--workers=1 --worker-class=sync --max-requests=50 --max-requests-jitter=10 --log-level=debug"
 
 ENV SECRETS_CONFIG=""
 
@@ -140,16 +142,14 @@ set -o errexit
 # Setting host to 0.0.0.0 (externally visible) to work with docker network.
 # The gunicorn command will use gunicorn.conf.py if it is in the same directory
 # by default. Setting it explicitly here to help show how it is being used.
+# The GUNICORN_CMD_ARGS will also be applied here if they are set. See gunicorn
+# documentation on how these configurations are applied.
+# https://docs.gunicorn.org/en/stable/settings.html
 gunicorn \
     --config ./gunicorn.conf.py \
     --chdir /usr/local/src/app \
     --reload \
     --name {{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}_app \
-    --workers 2 \
-    --worker-class gevent \
-    --max-requests 50 \
-    --max-requests-jitter 10 \
-    --log-level debug \
     --access-logfile - \
     --bind "0.0.0.0:$PORT" \
     "{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}.app:create_app()"
