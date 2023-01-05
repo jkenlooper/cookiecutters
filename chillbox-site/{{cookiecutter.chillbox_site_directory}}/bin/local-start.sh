@@ -86,7 +86,7 @@ export CHILLBOX_SERVER_NAME=chillbox.test
 export CHILLBOX_SERVER_PORT=80
 export IMMUTABLE_BUCKET_DOMAIN_NAME=chillbox-minio:9000
 export IMMUTABLE_BUCKET_NAME=chillboximmutable
-export LETS_ENCRYPT_SERVER=letsencrypt_test
+export ACME_SERVER=letsencrypt_test
 export S3_ENDPOINT_URL=http://chillbox-minio:9000
 # SERVER_NAME is set to empty string so nginx will not require Host header; which is useful for local development.
 export SERVER_NAME='""'
@@ -152,7 +152,7 @@ CHILLBOX_SERVER_NAME=chillbox.test
 CHILLBOX_SERVER_PORT=80
 IMMUTABLE_BUCKET_DOMAIN_NAME=chillbox-minio:9000
 IMMUTABLE_BUCKET_NAME=chillboximmutable
-LETS_ENCRYPT_SERVER=letsencrypt_test
+ACME_SERVER=letsencrypt_test
 S3_ENDPOINT_URL=http://chillbox-minio:9000
 # Not setting server_name to allow it to be set differently in each Dockerfile
 # if needed.
