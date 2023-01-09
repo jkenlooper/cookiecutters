@@ -184,21 +184,23 @@ IFS="$(printf '\n ')" && IFS="${IFS% }"
 set -f -- $services
 for service_json_obj in "$@"; do
   test -n "$service_json_obj" || continue
+  service_name=""
   service_handler=""
   secrets_config=""
   secrets_export_dockerfile="$(echo "$service_json_obj" | jq -r '.secrets_export_dockerfile // ""')"
   eval "$(echo "$service_json_obj" | jq -r '@sh "
+    service_name=\(.name)
     service_handler=\(.handler)
     secrets_config=\(.secrets_config // "")
     secrets_export_dockerfile=\(.secrets_export_dockerfile // "")
     "')"
-  echo "$service_handler"
+  echo "$service_name"
   test -n "$secrets_config" || continue
   test -n "$secrets_export_dockerfile" || (echo "ERROR $script_name: No secrets_export_dockerfile value set in services, yet secrets_config is defined. $slugname - $service_json_obj" && exit 1)
 
   mkdir -p "$not_encrypted_secrets_dir"
 
-  public_key="$not_secure_key_dir/$service_handler.public.pem"
+  public_key="$not_secure_key_dir/$service_name.public.pem"
 
   # For local development only! Create the public key as an empty file if it doesn't exist.
   touch "$public_key"
@@ -206,7 +208,7 @@ for service_json_obj in "$@"; do
   test -f "$public_key" || (echo "ERROR $script_name: No public key at $public_key" && exit 1)
 
   replace_secret_file=""
-  not_encrypted_secret_file="$not_encrypted_secrets_dir/$service_handler/$secrets_config"
+  not_encrypted_secret_file="$not_encrypted_secrets_dir/$service_name/$secrets_config"
 
   if [ -e "$not_encrypted_secret_file" ]; then
     echo "The file already exists at $not_encrypted_secret_file"
@@ -218,10 +220,10 @@ for service_json_obj in "$@"; do
 
   test -f "$project_dir/$service_handler/$secrets_export_dockerfile" || (echo "ERROR: No secrets export dockerfile at path: $project_dir/$service_handler/$secrets_export_dockerfile" && exit 1)
 
-  container_name="$(printf '%s' "$slugname-$service_handler-$project_name_hash" | grep -o -E '^.{0,63}')"
+  container_name="$(printf '%s' "$slugname-$service_name-$project_name_hash" | grep -o -E '^.{0,63}')"
   service_image_name="$container_name"
   tmpfs_dir="/run/tmp/$service_image_name"
-  service_persistent_dir="/var/lib/$slugname-$service_handler"
+  service_persistent_dir="/var/lib/$slugname-$service_name"
   chillbox_pubkey_dir="/var/lib/chillbox/public-keys"
 
   docker image rm "$service_image_name" || printf ""
@@ -233,7 +235,7 @@ for service_json_obj in "$@"; do
     --build-arg SERVICE_PERSISTENT_DIR="$service_persistent_dir" \
     --build-arg SLUGNAME="$slugname" \
     --build-arg VERSION="$version" \
-    --build-arg SERVICE_HANDLER="$service_handler" \
+    --build-arg SERVICE_NAME="$service_name" \
     -t "$service_image_name" \
     -f "$project_dir/$service_handler/$secrets_export_dockerfile" \
     "$project_dir/$service_handler/"
