@@ -1,0 +1,6 @@
+# Chillbox replaces this file. This is only a placeholder.
+
+## listen 443 ssl http2;
+## ssl_certificate /etc/letsencrypt/live/chillbox/fullchain.pem;
+## ssl_certificate_key /etc/letsencrypt/live/chillbox/privkey.pem;
+## location /.well-known/acme-challenge/ { ... }
