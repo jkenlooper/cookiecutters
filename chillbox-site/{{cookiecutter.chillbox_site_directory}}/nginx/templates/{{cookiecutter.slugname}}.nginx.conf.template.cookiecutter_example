@@ -13,7 +13,7 @@ server {
   # Use special wildcard server_name by prefixing with '.' so
   # [chillbox-hostname].${SERVER_NAME} will also match.
   # https://nginx.org/en/docs/http/server_names.html
-  server_name .${SERVER_NAME};
+  server_name ${SERVER_NAME} .${SERVER_NAME};
 
   root /srv/${SLUGNAME}/root;
   access_log /var/log/nginx/${SLUGNAME}/access.log;
