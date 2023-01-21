@@ -2,10 +2,10 @@
 
 # {{ cookiecutter.template_file_comment }}
 
-# UPKEEP due: "2023-01-10" label: "Alpine Linux base image" interval: "+3 months"
-# docker pull alpine:3.16.2
+# UPKEEP due: "2023-04-21" label: "Alpine Linux base image" interval: "+3 months"
+# docker pull alpine:3.17.1
 # docker image ls --digests alpine
-FROM alpine:3.16.2@sha256:bc41182d7ef5ffc53a40b044e725193bc10142a1243f395ee852a8d9730fc2ad
+FROM alpine:3.17.1@sha256:f271e74b17ced29b915d351685fd4644785c6d1559dd1f2d4189a5e851ef753a
 
 RUN <<DEV_USER
 addgroup -g 44444 dev
@@ -37,17 +37,14 @@ set -o errexit
 apk update
 /etc/chillbox/bin/install-chillbox-packages.sh
 
-ln -s /usr/bin/python3 /usr/bin/python
 SERVICE_DEPENDENCIES
 
 RUN  <<PYTHON_VIRTUALENV
 # Setup for python virtual env
 set -o errexit
 mkdir -p /usr/local/src/app
-/usr/bin/python3 -m venv /usr/local/src/app/.venv
-# The dev user will need write access since pip install will be adding files to
-# the .venv directory.
-chown -R dev:dev /usr/local/src/app/.venv
+chown -R dev:dev /usr/local/src/app
+su dev -c '/usr/bin/python3 -m venv /usr/local/src/app/.venv'
 PYTHON_VIRTUALENV
 # Activate python virtual env by updating the PATH
 ENV VIRTUAL_ENV=/usr/local/src/app/.venv
@@ -62,16 +59,13 @@ ARG WHEEL_VERSION=0.38.4
 RUN <<PIP_INSTALL
 # Install pip and wheel
 set -o errexit
-python -m pip install \
-    "pip==$PIP_VERSION" \
-    "wheel==$WHEEL_VERSION"
+su dev -c "python -m pip install 'pip==$PIP_VERSION' 'wheel==$WHEEL_VERSION'"
 PIP_INSTALL
 
 ARG FLASK_INSTANCE_PATH=/var/lib/{{ cookiecutter.slugname }}/
 ENV FLASK_INSTANCE_PATH=$FLASK_INSTANCE_PATH
 RUN <<FLASK_SETUP
 set -o errexit
-mkdir -p /usr/local/src/app
 mkdir -p $FLASK_INSTANCE_PATH
 chown -R dev:dev $FLASK_INSTANCE_PATH
 
@@ -79,15 +73,31 @@ mkdir -p /usr/local/src/app
 chown -R dev:dev /usr/local/src/app
 FLASK_SETUP
 
+RUN <<SUPPORT_LOCAL_S3
+# Create symbolic link for /home/dev/.aws/credentials
+set -o errexit
+
+# This credentials file will be replaced by a mount point.
+mkdir -p /var/lib/chillbox-local-shared/chillbox-minio/{{ cookiecutter.slugname }}-local-s3
+touch /var/lib/chillbox-local-shared/chillbox-minio/{{ cookiecutter.slugname }}-local-s3/local-chillbox_object_storage-credentials
+
+mkdir -p /home/dev/.aws
+ln -s /var/lib/chillbox-local-shared/chillbox-minio/{{ cookiecutter.slugname }}-local-s3/local-chillbox_object_storage-credentials /home/dev/.aws/credentials
+chmod 0600 /home/dev/.aws/credentials
+chown dev:dev /home/dev/.aws/credentials
+SUPPORT_LOCAL_S3
+
+USER dev
+
 # The dep directory should include the wheels and other source packages
 # created from running the verify.sh script.
-COPY dep /usr/local/src/app/dep
+COPY --chown=dev:dev dep /usr/local/src/app/dep
 
-COPY requirements.txt /usr/local/src/app/requirements.txt
-COPY setup.py /usr/local/src/app/setup.py
-COPY README.md /usr/local/src/app/README.md
-COPY gunicorn.conf.py /usr/local/src/app/gunicorn.conf.py
-COPY src /usr/local/src/app/src
+COPY --chown=dev:dev requirements.txt /usr/local/src/app/requirements.txt
+COPY --chown=dev:dev setup.py /usr/local/src/app/setup.py
+COPY --chown=dev:dev README.md /usr/local/src/app/README.md
+COPY --chown=dev:dev gunicorn.conf.py /usr/local/src/app/gunicorn.conf.py
+COPY --chown=dev:dev src /usr/local/src/app/src
 RUN <<PIP_INSTALL_APP
 # Install app in editable mode and use the local python packages.
 set -o errexit
@@ -159,20 +169,5 @@ RELOADER_SH
 chmod +x reloader.sh
 FILEWATCH_SUPPORT
 
-RUN <<SUPPORT_LOCAL_S3
-# Create symbolic link for /home/dev/.aws/credentials
-set -o errexit
-
-# This credentials file will be replaced by a mount point.
-mkdir -p /var/lib/chillbox-local-shared/chillbox-minio/{{ cookiecutter.slugname }}-local-s3
-touch /var/lib/chillbox-local-shared/chillbox-minio/{{ cookiecutter.slugname }}-local-s3/local-chillbox_object_storage-credentials
-
-mkdir -p /home/dev/.aws
-ln -s /var/lib/chillbox-local-shared/chillbox-minio/{{ cookiecutter.slugname }}-local-s3/local-chillbox_object_storage-credentials /home/dev/.aws/credentials
-chmod 0600 /home/dev/.aws/credentials
-chown dev:dev /home/dev/.aws/credentials
-SUPPORT_LOCAL_S3
-
-USER dev
 
 CMD ["/usr/local/src/app/reloader.sh"]
