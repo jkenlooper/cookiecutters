@@ -1,13 +1,13 @@
 server {
-  listen ${SERVER_PORT};
 
   # Chillbox will replace the contents of the
   # /etc/nginx/conf.d/${SLUGNAME}.ssl_cert.include file. The following directives
   # will be set depending on the existance of these cert files.
-  ## listen 443 ssl http2;
+  ## listen 80;
+  ## OR
+  ## listen 443 ssl;
   ## ssl_certificate /etc/letsencrypt/live/${SLUGNAME}/fullchain.pem;
   ## ssl_certificate_key /etc/letsencrypt/live/${SLUGNAME}/privkey.pem;
-  ## location /.well-known/acme-challenge/ { ... }
   include /etc/nginx/conf.d/${SLUGNAME}.ssl_cert.include;
 
   # Use special wildcard server_name by prefixing with '.' so
@@ -84,5 +84,28 @@ server {
   error_page 403 /forbidden.html;
   location = /forbidden.html {
     internal;
+  }
+}
+
+# This server is only matched when the above server is listening on port 443 and
+# SSL certs have been set. This server can be ignored when developing locally.
+server {
+  listen ${SERVER_PORT};
+  server_name ${SERVER_NAME} .${SERVER_NAME};
+
+  location / {
+    return 307 https://$host$request_uri;
+  }
+
+  # For SSL cert validation and renewal using webroot plugin.
+  location /.well-known/acme-challenge/ {
+    limit_except GET {
+      deny all;
+    }
+    root /srv/chillbox;
+  }
+  error_page 403 404 /drop;
+  location = /drop {
+    return 444;
   }
 }
