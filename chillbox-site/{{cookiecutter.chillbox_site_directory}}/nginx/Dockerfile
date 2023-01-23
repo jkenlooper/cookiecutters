@@ -2,10 +2,10 @@
 
 # {{ cookiecutter.template_file_comment }}
 
-# UPKEEP due: "2023-01-23" label: "NGINX base image" interval: "+5 months"
-# docker pull nginx:1.22.0-alpine
+# UPKEEP due: "2023-06-22" label: "NGINX base image" interval: "+5 months"
+# docker pull nginx:1.23.3-alpine
 # docker image ls --digests alpine
-FROM nginx:1.22.0-alpine@sha256:98a1e37840fdf90f57df595dae8e27a198278170323744e13464b7f3a927562e
+FROM nginx:1.23.3-alpine@sha256:659610aadb34b7967dea7686926fdcf08d588a71c5121edb094ce0e4cdbc45e6
 
 # These env vars match with what chillbox provides.
 ENV CHILLBOX_SERVER_NAME=chillbox.test
