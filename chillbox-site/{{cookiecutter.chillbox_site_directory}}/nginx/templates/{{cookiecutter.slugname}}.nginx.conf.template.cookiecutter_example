@@ -85,6 +85,14 @@ server {
   location = /forbidden.html {
     internal;
   }
+
+  # For SSL cert validation and renewal using webroot plugin.
+  location /.well-known/acme-challenge/ {
+    limit_except GET {
+      deny all;
+    }
+    root /srv/chillbox;
+  }
 }
 
 # This server is only matched when the above server is listening on port 443 and
