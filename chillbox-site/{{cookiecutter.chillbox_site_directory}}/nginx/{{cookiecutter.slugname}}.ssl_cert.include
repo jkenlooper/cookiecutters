@@ -2,5 +2,5 @@
 listen {{ cookiecutter.local_app_port }};
 
 ## listen 443 ssl;
-## ssl_certificate /etc/letsencrypt/live/chillbox/fullchain.pem;
-## ssl_certificate_key /etc/letsencrypt/live/chillbox/privkey.pem;
+## ssl_certificate /etc/letsencrypt/live/{{ cookiecutter.slugname }}/fullchain.pem;
+## ssl_certificate_key /etc/letsencrypt/live/{{ cookiecutter.slugname }}/privkey.pem;

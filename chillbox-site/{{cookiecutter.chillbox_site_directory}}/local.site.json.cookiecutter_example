@@ -282,7 +282,7 @@
         },
         {
           "name": "FLASK_APP",
-          "value": "site1_api.app"
+          "value": "{{ cookiecutter.slugname }}_api.app"
         },
         {
           "name": "FLASK_DEBUG",

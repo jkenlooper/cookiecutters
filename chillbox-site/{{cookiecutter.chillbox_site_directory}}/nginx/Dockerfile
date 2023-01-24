@@ -24,7 +24,7 @@ WORKDIR /build
 
 COPY --chown=nginx:nginx default.nginx.conf /etc/nginx/conf.d/default.conf
 COPY --chown=nginx:nginx nginx.conf /etc/nginx/nginx.conf
-COPY --chown=nginx:nginx site1.ssl_cert.include /etc/nginx/conf.d/site1.ssl_cert.include
+COPY --chown=nginx:nginx {{ cookiecutter.slugname }}.ssl_cert.include /etc/nginx/conf.d/{{ cookiecutter.slugname }}.ssl_cert.include
 
 COPY --chown=nginx:nginx root /srv/{{ cookiecutter.slugname }}/root
 
