@@ -1,6 +1,7 @@
 {
 
   "slugname": "llama",
+  "site_name": "{{ cookiecutter.slugname|replace('_', ' ')|replace('-', ' ')|title }}",
   "chillbox_site_directory": ".",
   "local_app_port": "38000",
   "_version": "0.0.1-alpha.2",

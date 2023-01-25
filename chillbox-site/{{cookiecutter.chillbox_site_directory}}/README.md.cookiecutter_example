@@ -1,6 +1,6 @@
-# `{{ cookiecutter.slugname }}`
+# {{ cookiecutter.site_name }}
 
-A Chillbox compatible site.
+A [Chillbox] compatible site.
 
 ## Maintenance
 
@@ -43,6 +43,10 @@ cookiecutter --directory {{ cookiecutter._directory }} \
   --no-input \
   {{ cookiecutter._repo }}.git \
   slugname={{ cookiecutter.slugname }} \
+  site_name="{{ cookiecutter.site_name }}" \
   local_app_port={{ cookiecutter.local_app_port }} \
   chillbox_site_directory={{ cookiecutter.chillbox_site_directory }}
 ```
+
+
+[Chillbox]: https://github.com/jkenlooper/chillbox

@@ -1,13 +1,13 @@
 {
-  "name": "{{ cookiecutter.slugname }}",
-  "release": "Not applicable for local development. Change to absolute path or a URL when deploying with chillbox.",
+  "name": "{{ cookiecutter.site_name }}",
+  "release": "Not applicable for local development. Change to absolute path or a URL when deploying with Chillbox.",
   "contact": {
     "owner": "{{ cookiecutter.slugname }}@example.test",
     "technical": "{{ cookiecutter.slugname }}@example.test"
   },
-  "server_name": "{{ cookiecutter.slugname }}.example.chill.box",
+  "server_name": "{{ cookiecutter.slugname }}.example.test",
   "domain_list": [
-    "{{ cookiecutter.slugname }}.example.chill.box"
+    "{{ cookiecutter.slugname }}.example.test"
   ],
   "env": [
     {
