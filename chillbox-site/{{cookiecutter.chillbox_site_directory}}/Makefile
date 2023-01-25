@@ -64,3 +64,18 @@ stop: ## Stop local development
 .PHONY: clean
 clean: ## Remove files that were created
 	printf '%s\0' dist/$(slugname)-$(VERSION).tar.gz $(objects) | xargs -0 rm -f
+
+.PHONY: upkeep
+upkeep: ## Send to stderr any upkeep comments that have a past due date
+	@grep -r -n -E "^\W+UPKEEP\W+(due:\W?\".*?\"|label:\W?\".*?\"|interval:\W?\".*?\")" . \
+	| xargs -L 1 \
+	python -c "\
+import sys; \
+import datetime; \
+import re; \
+now=datetime.date.today(); \
+upkeep=\" \".join(sys.argv[1:]); \
+m=re.search(r'due: (\d{4}-\d{2}-\d{2})', upkeep); \
+due=datetime.date.fromisoformat(m.group(1)); \
+remaining=due - now; \
+sys.exit(upkeep if remaining.days < 0 else 0)"
