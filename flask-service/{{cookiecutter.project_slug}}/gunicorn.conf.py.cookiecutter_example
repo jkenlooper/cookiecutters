@@ -1,6 +1,9 @@
 import sys
 import subprocess
 import logging
+from os import getenv
+
+VIRTUAL_ENV_BIN = getenv("VIRTUAL_ENV_BIN")
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s : %(msg)s")
 logger = logging.getLogger(__file__)
@@ -17,7 +20,7 @@ def on_starting(server):
     # initialization work for a database before the service starts accepting
     # connections.
     try:
-        subprocess.run(["flask", "init-db"], check=True)
+        subprocess.run([f"{VIRTUAL_ENV_BIN}/flask", "init-db"], check=True)
     except subprocess.CalledProcessError as err:
         logger.exception(err)
         sys.exit(err.returncode if err.returncode > 0 else 1)

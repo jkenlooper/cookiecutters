@@ -293,6 +293,10 @@
           "value": "--workers=2 --worker-class=gevent --max-requests=50 --max-requests-jitter=10 --log-level=debug"
         },
         {
+          "name": "VIRTUAL_ENV_BIN",
+          "value": "/usr/local/src/$SLUGNAME/api/.venv/bin"
+        },
+        {
           "name": "FLASK_INSTANCE_PATH",
           "value": "/var/lib/$SLUGNAME/api"
         }

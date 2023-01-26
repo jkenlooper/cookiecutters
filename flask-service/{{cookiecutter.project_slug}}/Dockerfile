@@ -149,6 +149,11 @@ cat <<'RELOADER_SH' > /usr/local/src/app/reloader.sh
 
 set -o errexit
 
+# VIRTUAL_ENV_BIN can be used by gunicorn.conf.py when running commands like
+# 'flask' and others that are part of the Python virtual environment.
+# Override any existing VIRTUAL_ENV_BIN here when running this locally.
+export VIRTUAL_ENV_BIN="${VIRTUAL_ENV}/bin"
+
 # Setting host to 0.0.0.0 (externally visible) to work with docker network.
 # The gunicorn command will use gunicorn.conf.py if it is in the same directory
 # by default. Setting it explicitly here to help show how it is being used.
