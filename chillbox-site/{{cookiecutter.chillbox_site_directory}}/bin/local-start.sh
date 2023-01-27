@@ -81,7 +81,6 @@ MEOW
 
 cat <<MEOW > "$site_env"
 export ARTIFACT_BUCKET_NAME=chillboxartifact
-export AWS_PROFILE=chillbox_object_storage
 export CHILLBOX_SERVER_NAME=chillbox.test
 export CHILLBOX_SERVER_PORT=80
 export IMMUTABLE_BUCKET_DOMAIN_NAME=chillbox-minio:9000
@@ -147,7 +146,6 @@ cat <<MEOW > "$site_env_vars_file"
 # Generated from $0 on $(date)
 
 ARTIFACT_BUCKET_NAME=chillboxartifact
-AWS_PROFILE=chillbox_object_storage
 CHILLBOX_SERVER_NAME=chillbox.test
 CHILLBOX_SERVER_PORT=80
 IMMUTABLE_BUCKET_DOMAIN_NAME=chillbox-minio:9000
