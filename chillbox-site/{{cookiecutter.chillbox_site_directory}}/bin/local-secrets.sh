@@ -96,10 +96,9 @@ script_name="$(basename "$0")"
 usage() {
   cat <<HERE
 
-Fake the encryption of a small (less than 382 bytes) file using a provided
-public key file in PEM format. This should only be used for local development
-purposes when the file does not have any sensitive information in it. The public
-key file is not actually used.
+Fake the encryption of a file using a provided public key file in PEM format.
+This should only be used for local development purposes when the file does not
+have any sensitive information in it. The public key file is not actually used.
 
 Usage:
   $script_name -h
@@ -122,8 +121,17 @@ HERE
 }
 
 fake_encrypt_file() {
-  printf "%s" "$input_plaintext" | \
-  cat > "$output_ciphertext_file"
+  input_plaintext_file="$1"
+
+  if [ "$input_plaintext_file" = "-" ]; then
+    IFS="" read -r input_plaintext
+    printf "%s" "$input_plaintext" > "$output_ciphertext_file"
+  else
+    dd if="$input_plaintext_file" of="$output_ciphertext_file" 2> /dev/null
+  fi
+  echo "
+WARNING: The '$output_ciphertext_file' was NOT encrypted. This is only for local development.
+  "
 }
 
 while getopts "hk:o:" OPTION ; do
@@ -137,32 +145,13 @@ while getopts "hk:o:" OPTION ; do
   esac
 done
 shift $((OPTIND - 1))
-input_plaintext_file="${1:--}"
-input_plaintext=""
-
-# Need to check the length of plaintext since this key is only meant for small payloads.
-# https://crypto.stackexchange.com/questions/42097/what-is-the-maximum-size-of-the-plaintext-message-for-rsa-oaep/42100#42100
-
-if [ "$input_plaintext_file" = "-" ]; then
-  IFS="" read -r input_plaintext
-  {{ 'input_plaintext_size="${#input_plaintext}"' }}
-  test -n "$input_plaintext" || (echo "ERROR $script_name: No content to encrypt." && exit 1)
-  test -n "$input_plaintext_size" || (echo "ERROR $script_name: Failed to get size of plaintext." && exit 1)
-  test "$input_plaintext_size" -le "382" || (echo "ERROR $script_name: The plaintext byte length is over the 382 byte limit allowed for the key." && exit 1)
-else
-  test -e "$input_plaintext_file"
-  plaintext_filesize="$(stat -c '%s' "$input_plaintext_file")"
-  test -n "$plaintext_filesize" || (echo "ERROR $script_name: Failed to get size of plaintext file." && exit 1)
-  test "$plaintext_filesize" -le "382" || (echo "ERROR $script_name: The plaintext byte length is over the 382 byte limit allowed for the key." && exit 1)
-  input_plaintext="$(cat "$input_plaintext_file")"
-fi
 
 if [ ! -e "$public_pem_file" ]; then
   echo "ERROR $script_name: The public key doesn't exist. $public_pem_file"
   exit 4
 fi
 
-fake_encrypt_file
+fake_encrypt_file "${1:--}"
 FAKE_ENCRYPT_FILE
 chmod +x "$not_secure_key_dir/fake-encrypt-file"
 
