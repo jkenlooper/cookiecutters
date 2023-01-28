@@ -61,6 +61,10 @@ start: ## Start local development
 stop: ## Stop local development
 	./bin/local-stop.sh -s $(slugname) local.site.json
 
+.PHONY: secrets
+secrets: ## Create secrets for local development
+	./bin/local-secrets.sh -s $(slugname) local.site.json
+
 .PHONY: clean
 clean: ## Remove files that were created
 	printf '%s\0' dist/$(slugname)-$(VERSION).tar.gz $(objects) | xargs -0 rm -f
