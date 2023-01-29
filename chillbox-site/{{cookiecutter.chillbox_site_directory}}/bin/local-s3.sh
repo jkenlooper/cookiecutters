@@ -132,11 +132,13 @@ HERE
 # Sleeper image needs no context.
 sleeper_image="$project_name_hash-sleeper"
 docker image rm "$sleeper_image" > /dev/null 2>&1 || printf ""
+echo "INFO $script_name: Building docker image: $sleeper_image"
 export DOCKER_BUILDKIT=1
 < "$project_dir/bin/sleeper.Dockerfile" \
   docker build \
+    --quiet \
     -t "$sleeper_image" \
-    - > /dev/null 2>&1
+    -
 
 container_name="$(printf '%s' "$slugname-local-s3-sleeper-$project_name_hash" | grep -o -E '^.{0,63}')"
 docker stop --time 0 "$container_name" > /dev/null 2>&1 || printf ""

@@ -201,12 +201,13 @@ for service_json_obj in "$@"; do
 
     immutable)
       printf '\n\n%s\n\n' "INFO $script_name: Starting $service_lang service: $container_name"
-      set -x
       docker image rm "$image_name" > /dev/null 2>&1 || printf ""
+      echo "INFO $script_name: Building docker image: $image_name"
       DOCKER_BUILDKIT=1 docker build \
-          --target build \
-          -t "$image_name" \
-          "$project_dir/$service_handler"
+        --quiet \
+        --target build \
+        -t "$image_name" \
+        "$project_dir/$service_handler"
       docker run -d --tty \
         --network chillboxnet \
         --env-file "$site_env_vars_file" \
@@ -215,21 +216,22 @@ for service_json_obj in "$@"; do
         --mount "type=bind,src=$project_dir/$service_handler/src,dst=/build/src,readonly" \
         --name "$container_name" \
         "$image_name"
-      set +x
       ;;
 
     python)
       if [ -n "$secrets_config" ] && [ ! -s "$not_encrypted_secrets_dir/$service_handler/$secrets_config" ]; then
         "$script_dir/local-secrets.sh" -s "$slugname" "$modified_site_json_file"
+        test -s "$not_encrypted_secrets_dir/$service_handler/$secrets_config" || (echo "ERROR $script_name: Failed to create the file $not_encrypted_secrets_dir/$service_handler/$secrets_config" && exit 1)
       else
         # Just create an empty file so the container mount works.
         touch "$not_encrypted_secrets_dir/$service_handler/$secrets_config"
       fi
 
       printf '\n\n%s\n\n' "INFO $script_name: Starting $service_lang service: $container_name"
-      set -x
       docker image rm "$image_name" > /dev/null 2>&1 || printf ""
+      echo "INFO $script_name: Building docker image: $image_name"
       DOCKER_BUILDKIT=1 docker build \
+        --quiet \
         -t "$image_name" \
         "$project_dir/$service_handler"
       docker run -d --tty \
@@ -243,7 +245,6 @@ for service_json_obj in "$@"; do
         --mount "type=bind,src=$project_dir/$service_handler/src/${slugname}_${service_handler},dst=/usr/local/src/app/src/${slugname}_${service_handler},readonly" \
         --mount "type=bind,src=$not_encrypted_secrets_dir/$service_handler/$secrets_config,dst=/var/lib/local-secrets/$slugname/$service_handler/$secrets_config,readonly" \
         "$image_name"
-      set +x
       sleep 2
       container_status="$(docker container inspect $container_name | jq -r '.[0].State.Status')"
       if [ "$container_status" = "exited" ]; then
@@ -254,7 +255,6 @@ for service_json_obj in "$@"; do
         if [ "$confirm" = "y" ]; then
           printf '\n\n%s\n\n' "INFO $script_name: Debugging $service_lang service: $container_name"
           docker container rm "$container_name" > /dev/null 2>&1 || printf ''
-          set -x
           docker run -d --tty \
             --name "$container_name" \
             --user root \
@@ -267,7 +267,6 @@ for service_json_obj in "$@"; do
             --mount "type=bind,src=$project_dir/$service_handler/src/${slugname}_${service_handler},dst=/usr/local/src/app/src/${slugname}_${service_handler},readonly" \
             --mount "type=bind,src=$not_encrypted_secrets_dir/$service_handler/$secrets_config,dst=/var/lib/local-secrets/$slugname/$service_handler/$secrets_config,readonly" \
             "$image_name" ./sleep.sh
-          set +x
           echo "Running the $container_name container with root user and sleep process to keep it started."
           echo "Use the 'docker exec' command to troubleshoot."
         fi
@@ -276,11 +275,12 @@ for service_json_obj in "$@"; do
 
     chill)
       printf '\n\n%s\n\n' "INFO $script_name: Starting $service_lang service: $container_name"
-      set -x
       docker image rm "$image_name" > /dev/null 2>&1 || printf ""
+      echo "INFO $script_name: Building docker image: $image_name"
       DOCKER_BUILDKIT=1 docker build \
-          -t "$image_name" \
-          "$project_dir/$service_handler"
+        --quiet \
+        -t "$image_name" \
+        "$project_dir/$service_handler"
       docker run -d \
         --name "$container_name" \
         --network chillboxnet \
@@ -292,7 +292,6 @@ for service_json_obj in "$@"; do
         --mount "type=bind,src=$project_dir/$service_handler/queries,dst=/home/chill/app/queries" \
         --mount "type=bind,src=$project_dir/$service_handler/templates,dst=/home/chill/app/templates" \
         "$image_name"
-      set +x
       ;;
 
   esac
@@ -306,9 +305,11 @@ build_start_nginx() {
   service_handler="nginx"
   host="$nginx_host"
   docker image rm "$host" > /dev/null 2>&1 || printf ""
+  echo "INFO $script_name: Building docker image: $host"
   DOCKER_BUILDKIT=1 docker build \
-      -t "$host" \
-      "$project_dir/$service_handler"
+    --quiet \
+    -t "$host" \
+    "$project_dir/$service_handler"
   docker run -d \
     -p "$app_port:$app_port" \
     --name "$host" \

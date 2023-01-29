@@ -17,8 +17,9 @@ script_dir="$(dirname "$(realpath "$0")")"
 project_dir="$(dirname "${script_dir}")"
 script_name="$(basename "$0")"
 project_dir_basename="$(basename "$project_dir")"
-name_hash="$(printf "%s" "$0" | md5sum | cut -d' ' -f1)"
-{{ 'test "${#name_hash}" -eq "32" || (echo "ERROR $script_name: Failed to create a name hash from the script file ($0)" && exit 1)' }}
+# Must use the same hash that the local-start.sh has for the project.
+project_name_hash="$(printf "%s" "$project_dir" | md5sum | cut -d' ' -f1)"
+{{ 'test "${#project_name_hash}" -eq "32" || (echo "ERROR $script_name: Failed to create a project name hash from the project dir ($0)" && exit 1)' }}
 
 
 usage() {
@@ -73,7 +74,7 @@ test -f "$site_json_file" || (echo "ERROR $script_name: The $site_json_file is n
 # Storing the local development secrets in the user data directory for this site
 # depending on the project directory path at the time.
 # https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-site_data_home="${XDG_DATA_HOME:-"$HOME/.local/share"}/$project_dir_basename-$slugname--$name_hash"
+site_data_home="${XDG_DATA_HOME:-"$HOME/.local/share"}/$project_dir_basename-$slugname--$project_name_hash"
 
 not_encrypted_secrets_dir="$site_data_home/not-encrypted-secrets"
 
@@ -156,15 +157,17 @@ FAKE_ENCRYPT_FILE
 chmod +x "$not_secure_key_dir/fake-encrypt-file"
 
 # Sleeper image needs no context.
-sleeper_image="$name_hash-sleeper"
+sleeper_image="sleeper-$project_name_hash"
 docker image rm "$sleeper_image" > /dev/null 2>&1 || printf ""
+echo "INFO $script_name: Building docker image: $sleeper_image"
 export DOCKER_BUILDKIT=1
 < "$project_dir/bin/sleeper.Dockerfile" \
   docker build \
+    --quiet \
     -t "$sleeper_image" \
-    - > /dev/null 2>&1
+    -
 
-version="0.0.0-local+$name_hash"
+version="0.0.0-local+$project_name_hash"
 
 services="$(jq -c '.services // [] | .[]' "$site_json_file")"
 test -n "$services" || (echo "WARNING $script_name: No services found in $site_json_file." && exit 0)
@@ -209,16 +212,16 @@ for service_json_obj in "$@"; do
 
   test -f "$project_dir/$service_handler/$secrets_export_dockerfile" || (echo "ERROR: No secrets export dockerfile at path: $project_dir/$service_handler/$secrets_export_dockerfile" && exit 1)
 
-  container_name="$(printf '%s' "$slugname-$service_name-$name_hash" | grep -o -E '^.{0,63}')"
-  container_name_sleeper="$(printf '%s' "$slugname-$service_name-sleeper-$name_hash" | grep -o -E '^.{0,63}')"
+  container_name="$(printf '%s' "$slugname-$service_name-$project_name_hash" | grep -o -E '^.{0,63}')"
+  container_name_sleeper="$(printf '%s' "$slugname-$service_name-sleeper-$project_name_hash" | grep -o -E '^.{0,63}')"
   service_image_name="$container_name"
   tmpfs_dir="/run/tmp/$service_image_name"
   service_persistent_dir="/var/lib/$slugname-$service_name"
   chillbox_pubkey_dir="/var/lib/chillbox/public-keys"
 
-  docker image rm "$service_image_name" || printf ""
-  export DOCKER_BUILDKIT=1
-  docker build \
+  docker image rm "$service_image_name" > /dev/null 2>&1 || printf ""
+  echo "INFO $script_name: Building docker image: $service_image_name"
+  DOCKER_BUILDKIT=1 docker build \
     --quiet \
     --build-arg SECRETS_CONFIG="$secrets_config" \
     --build-arg CHILLBOX_PUBKEY_DIR="$chillbox_pubkey_dir" \
@@ -230,7 +233,6 @@ for service_json_obj in "$@"; do
     -t "$service_image_name" \
     -f "$project_dir/$service_handler/$secrets_export_dockerfile" \
     "$project_dir/$service_handler/"
-  echo "INFO $script_name: Finished docker build of $service_image_name"
 
   echo "INFO $script_name: Running the container $container_name in interactive mode to encrypt and upload secrets. This container is using docker image $service_image_name and the Dockerfile $project_dir/$service_handler/$secrets_export_dockerfile"
   docker run \
