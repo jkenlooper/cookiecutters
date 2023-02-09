@@ -2,6 +2,10 @@
 
 A [Chillbox] compatible site.
 
+```
+make start
+```
+
 ## Maintenance
 
 Where possible, an upkeep comment has been added to various parts of the source

@@ -11,6 +11,10 @@
   ],
   "env": [
     {
+      "name": "REDIS_URL_DEFAULT_USER",
+      "value": "redis://$SLUGNAME-redis-$PROJECT_NAME_HASH:$REDIS_PORT?db=0"
+    },
+    {
       "name": "CHILL_STATIC_TRY_FILES_LAST_PARAM",
       "value": "@chillstatic"
     },
@@ -210,6 +214,11 @@
       "value": "1s"
     }
   ],
+  "redis": {
+    "port": 38009,
+    "maxmemory": "20mb",
+    "maxmemory-policy": "allkeys-lfu"
+  },
   "crontab": [
     "13 5 * * 6 echo 'do something'"
   ],

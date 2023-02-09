@@ -63,6 +63,12 @@ create_archive() {
     done
   done
 
+  redis_dir="$site_json_file_dir/redis"
+  if [ -d "$redis_dir" ]; then
+    mkdir -p "$tmpdir/$slugname/redis"
+    cp -R "$redis_dir/users.acl" "$tmpdir/$slugname/redis/"
+  fi
+
   nginx_dir="$site_json_file_dir/nginx"
   mkdir -p "$tmpdir/$slugname/nginx"
   cp -R "$nginx_dir/root" "$nginx_dir/templates" "$tmpdir/$slugname/nginx/"

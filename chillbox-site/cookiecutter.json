@@ -4,12 +4,13 @@
   "site_name": "{{ cookiecutter.slugname|replace('_', ' ')|replace('-', ' ')|title }}",
   "chillbox_site_directory": ".",
   "local_app_port": "38000",
-  "_version": "0.0.1-alpha.2",
+  "_version": "0.0.1-alpha.3",
   "_repo": "https://github.com/jkenlooper/cookiecutters",
   "_directory": "chillbox-site",
   "template_file_comment": "This file was generated from the {{ cookiecutter._directory }} directory in {{ cookiecutter._repo }} . Any modifications needed to this file should be done on that originating file.",
-  "_read_only": "nginx/.dockerignore nginx/Dockerfile nginx/default.nginx.conf nginx/nginx.conf Makefile bin/artifact.sh bin/envsubst-site-env.sh bin/immutable.sh bin/local-s3.sh bin/local-secrets.sh bin/local-start.sh bin/local-stop.sh bin/release.sh bin/utils.sh bin/sleeper.Dockerfile",
+  "_read_only": "nginx/.dockerignore nginx/Dockerfile nginx/default.nginx.conf nginx/nginx.conf Makefile bin/artifact.sh bin/envsubst-site-env.sh bin/immutable.sh bin/local-s3.sh bin/local-secrets.sh bin/local-start.sh bin/local-stop.sh bin/release.sh bin/utils.sh bin/sleeper.Dockerfile bin/local-redis.sh redis/Dockerfile redis/redis.conf.patch redis/.dockerignore",
   "_copy_without_render": [
+    "redis/redis.conf.patch"
   ]
 }
 

@@ -1,0 +1,1 @@
+user default on nopass allchannels allkeys +@all -@admin -@dangerous -@scripting

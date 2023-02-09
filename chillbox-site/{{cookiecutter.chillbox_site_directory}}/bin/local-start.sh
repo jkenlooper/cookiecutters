@@ -171,6 +171,11 @@ stop_and_rm_containers_silently "$slugname" "$project_name_hash" "$site_json_fil
 
 "$script_dir/local-s3.sh"
 
+has_redis="$(jq -r -e 'has("redis")' "$site_json_file" || printf "false")"
+if [ "$has_redis" = "true" ]; then
+  "$script_dir/local-redis.sh" -s "$slugname" "$site_json_file"
+fi
+
 services="$(jq -c '.services // [] | .[]' "$modified_site_json_file")"
 IFS="$(printf '\n ')" && IFS="${IFS% }"
 #shellcheck disable=SC2086
