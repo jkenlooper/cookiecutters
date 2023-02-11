@@ -1,5 +1,5 @@
---- redis-orig.conf	2023-02-07 14:57:46.107186188 -0700
-+++ redis.conf	2023-02-08 21:56:47.345563685 -0700
+--- redis.conf
++++ chillbox.redis.conf
 @@ -135,7 +135,7 @@
  
  # Accept connections on the specified port, default is 6379 (IANA #815344).

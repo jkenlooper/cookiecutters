@@ -4,8 +4,6 @@
 
 set -o errexit
 
-set -x
-
 script_name="$(basename "$0")"
 script_dir="$(dirname "$0")"
 
