@@ -73,6 +73,8 @@ output_all_logs_on_containers () {
     echo ""
   }
 
+  docker logs chillbox-minio
+
   services="$(jq -c '.services // [] | .[]' "$site_json_file")"
   IFS="$(printf '\n ')" && IFS="${IFS% }"
   #shellcheck disable=SC2086
@@ -89,6 +91,42 @@ output_all_logs_on_containers () {
     show_log "redis"
   fi
   show_log "nginx"
+}
+
+all_containers_done () {
+  slugname="$1"
+  shift 1
+  project_name_hash="$1"
+  shift 1
+  site_json_file="$1"
+  shift 1
+
+  is_container_done () {
+    service_name="$1"
+    container_name="$(printf '%s' "$slugname-$service_name-$project_name_hash" | grep -o -E '^.{0,63}')"
+    container_status="$(docker container inspect $container_name | jq -r '.[0].State.Status')"
+    if [ "$container_status" != "exited" ] && [ "$container_status" != "running" ]; then
+      exit 1
+    fi
+  }
+
+  services="$(jq -c '.services // [] | .[]' "$site_json_file")"
+  IFS="$(printf '\n ')" && IFS="${IFS% }"
+  #shellcheck disable=SC2086
+  set -f -- $services
+  for service_json_obj in "$@"; do
+    service_name=""
+    eval "$(echo "$service_json_obj" | jq -r '@sh "
+      service_name=\(.name)
+      "')"
+    is_container_done "$service_name"
+  done
+  has_redis="$(jq -r -e 'has("redis")' "$site_json_file" || printf "false")"
+  if [ "$has_redis" = "true" ]; then
+    is_container_done "redis"
+  fi
+  is_container_done "nginx"
+  printf "yes"
 }
 
 show_container_state () {

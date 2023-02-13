@@ -5,6 +5,9 @@
 set -o errexit
 
 script_name="$(basename "$0")"
+CONTAINER_START_TIMEOUT="${CONTAINER_START_TIMEOUT-10}"
+sleep_interval="0.1"
+max_number_of_checks="$(echo "scale=0; $CONTAINER_START_TIMEOUT / $sleep_interval" | bc)"
 
 usage() {
   cat <<HERE
@@ -212,7 +215,7 @@ for service_json_obj in "$@"; do
         --quiet \
         --target build \
         -t "$image_name" \
-        "$project_dir/$service_handler"
+        "$project_dir/$service_handler" > /dev/null
       docker run -d --tty \
         --network chillboxnet \
         --env-file "$site_env_vars_file" \
@@ -220,7 +223,7 @@ for service_json_obj in "$@"; do
         -e HOST="localhost" \
         --mount "type=bind,src=$project_dir/$service_handler/src,dst=/build/src,readonly" \
         --name "$container_name" \
-        "$image_name"
+        "$image_name" > /dev/null
       ;;
 
     python)
@@ -238,7 +241,7 @@ for service_json_obj in "$@"; do
       DOCKER_BUILDKIT=1 docker build \
         --quiet \
         -t "$image_name" \
-        "$project_dir/$service_handler"
+        "$project_dir/$service_handler" > /dev/null
       docker run -d --tty \
         --name "$container_name" \
         --env-file "$site_env_vars_file" \
@@ -249,9 +252,20 @@ for service_json_obj in "$@"; do
         --mount "type=volume,src=chillbox-local-shared,dst=/var/lib/chillbox-local-shared,readonly=true" \
         --mount "type=bind,src=$project_dir/$service_handler/src/${slugname}_${service_handler},dst=/usr/local/src/app/src/${slugname}_${service_handler},readonly" \
         --mount "type=bind,src=$not_encrypted_secrets_dir/$service_handler/$secrets_config,dst=/var/lib/local-secrets/$slugname/$service_handler/$secrets_config,readonly" \
-        "$image_name"
-      sleep 2
+        "$image_name" > /dev/null
+
       container_status="$(docker container inspect $container_name | jq -r '.[0].State.Status')"
+      i="0"
+      while [ "$container_status" != "running" ]; do
+        i="$((i+1))"
+        test "$i" -lt "$max_number_of_checks" || break
+        sleep "$sleep_interval"
+        container_status="$(docker container inspect $container_name | jq -r '.[0].State.Status')"
+        if [ "$container_status" = "exited" ]; then
+          break
+        fi
+      done
+
       if [ "$container_status" = "exited" ]; then
         docker logs "$container_name"
         echo "ERROR $script_name: Failed to start $service_lang service: $container_name"
@@ -271,7 +285,7 @@ for service_json_obj in "$@"; do
             --mount "type=volume,src=chillbox-local-shared,dst=/var/lib/chillbox-local-shared,readonly=true" \
             --mount "type=bind,src=$project_dir/$service_handler/src/${slugname}_${service_handler},dst=/usr/local/src/app/src/${slugname}_${service_handler},readonly" \
             --mount "type=bind,src=$not_encrypted_secrets_dir/$service_handler/$secrets_config,dst=/var/lib/local-secrets/$slugname/$service_handler/$secrets_config,readonly" \
-            "$image_name" ./sleep.sh
+            "$image_name" ./sleep.sh > /dev/null
           echo "Running the $container_name container with root user and sleep process to keep it started."
           echo "Use the 'docker exec' command to troubleshoot."
         fi
@@ -285,7 +299,7 @@ for service_json_obj in "$@"; do
       DOCKER_BUILDKIT=1 docker build \
         --quiet \
         -t "$image_name" \
-        "$project_dir/$service_handler"
+        "$project_dir/$service_handler" > /dev/null
       docker run -d \
         --name "$container_name" \
         --network chillboxnet \
@@ -296,7 +310,7 @@ for service_json_obj in "$@"; do
         --mount "type=bind,src=$project_dir/$service_handler/documents,dst=/home/chill/app/documents" \
         --mount "type=bind,src=$project_dir/$service_handler/queries,dst=/home/chill/app/queries" \
         --mount "type=bind,src=$project_dir/$service_handler/templates,dst=/home/chill/app/templates" \
-        "$image_name"
+        "$image_name" > /dev/null
       ;;
 
   esac
@@ -309,12 +323,13 @@ nginx_host="$(printf '%s' "$slugname-nginx-$project_name_hash" | grep -o -E '^.{
 build_start_nginx() {
   service_handler="nginx"
   host="$nginx_host"
+  printf '\n\n%s\n\n' "INFO $script_name: Starting nginx: $host"
   docker image rm "$host" > /dev/null 2>&1 || printf ""
   echo "INFO $script_name: Building docker image: $host"
   DOCKER_BUILDKIT=1 docker build \
     --quiet \
     -t "$host" \
-    "$project_dir/$service_handler"
+    "$project_dir/$service_handler" > /dev/null
   docker run -d \
     -p "$app_port:$app_port" \
     --name "$host" \
@@ -330,11 +345,22 @@ build_start_nginx() {
     --mount "type=bind,src=$project_dir/$service_handler/templates,dst=/build/templates,readonly" \
     --mount "type=bind,src=$project_dir/bin/envsubst-site-env.sh,dst=/build/envsubst-site-env.sh,readonly" \
     --mount "type=bind,src=$modified_site_json_file,dst=/build/local.site.json,readonly" \
-    "$host"
+    "$host" > /dev/null
 }
 build_start_nginx
 
-sleep 2
+wait_until_all_finished() {
+  all_done="$(all_containers_done "$slugname" "$project_name_hash" "$site_json_file" || printf "no")"
+  i="0"
+  while [ "$all_done" != "yes" ]; do
+    i="$((i+1))"
+    test "$i" -lt "$max_number_of_checks" || break
+    sleep "$sleep_interval"
+    all_done="$(all_containers_done "$slugname" "$project_name_hash" "$site_json_file" || printf "no")"
+  done
+}
+wait_until_all_finished
+
 output_all_logs_on_containers "$slugname" "$project_name_hash" "$site_json_file"
 
 show_container_state "$slugname" "$project_name_hash" "$site_json_file"

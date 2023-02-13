@@ -96,7 +96,7 @@ if [ "$is_chillbox_minio_running" != "true" ]; then
     --publish 9001:9001 \
     --network chillboxnet \
     --mount 'type=volume,src=chillbox-minio-data,dst=/data,readonly=false' \
-    "$minio_image"
+    "$minio_image" > /dev/null
 fi
 
 printf "\n%s\n" "Waiting for chillbox-minio container to be in running state."
@@ -117,7 +117,6 @@ while true; do
   sleep 0.1
 done
 echo ""
-docker logs chillbox-minio
 # The user and policy may already exist. Ignore errors here.
 docker exec chillbox-minio mc admin user add local "${local_chillbox_app_key_id}" "${local_chillbox_secret_access_key}" 2> /dev/null || printf ""
 docker exec chillbox-minio mc admin policy set local readwrite user="${local_chillbox_app_key_id}" 2> /dev/null || printf ""
@@ -138,7 +137,7 @@ export DOCKER_BUILDKIT=1
   docker build \
     --quiet \
     -t "$sleeper_image" \
-    -
+    - > /dev/null
 
 container_name="$(printf '%s' "$slugname-local-s3-sleeper-$project_name_hash" | grep -o -E '^.{0,63}')"
 docker stop --time 0 "$container_name" > /dev/null 2>&1 || printf ""

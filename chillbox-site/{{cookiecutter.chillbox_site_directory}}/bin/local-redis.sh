@@ -59,19 +59,20 @@ redis_host="$(printf '%s' "$slugname-redis-$project_name_hash" | grep -o -E '^.{
 build_start_redis() {
   service_handler="redis"
   host="$redis_host"
+  printf '\n\n%s\n\n' "INFO $script_name: Starting redis: $host"
   docker image rm "$host" > /dev/null 2>&1 || printf ""
   echo "INFO $script_name: Building docker image: $host"
   DOCKER_BUILDKIT=1 docker build \
     --quiet \
     -t "$host" \
-    "$project_dir/$service_handler"
+    "$project_dir/$service_handler" > /dev/null
   set -- "$(jq -r '.redis | to_entries | .[] | "--\(.key) " + "\(.value)"' "$site_json_file")"
   docker run -d \
     --name "$host" \
     --network chillboxnet \
     --mount "type=volume,src=$slugname-redis-data-$project_name_hash,dst=/var/lib/redis,readonly=false" \
     "$host" \
-    redis-server /etc/redis/redis.conf $@ --bind "0.0.0.0" --protected-mode "no" --dir "/var/lib/redis" --aclfile "/etc/redis/users.acl" --unixsocket "/run/redis.sock"
+    redis-server /etc/redis/redis.conf $@ --bind "0.0.0.0" --protected-mode "no" --dir "/var/lib/redis" --aclfile "/etc/redis/users.acl" --unixsocket "/run/redis.sock" > /dev/null
 }
 build_start_redis
 
