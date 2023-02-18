@@ -10,10 +10,8 @@ mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_dir := $(dir $(mkfile_path))
 slugname := {{ cookiecutter.slugname }}
 
-project_files := $(shell find . -type f -not -path './.git/*' -not -path './dist/*' | sort)
-
 # The version string includes the build metadata
-VERSION := $(shell cat VERSION)+$(shell cat $(project_files) | md5sum - | cut -d' ' -f1)
+VERSION := $(shell cat VERSION)+$(shell find . -type f -not -path './.git/*' -not -path './dist/*' -exec md5sum '{}' \; | sort | md5sum - | cut -d' ' -f1)
 
 # Verify version string compiles with semver.org, output it for chillbox to use.
 inspect.VERSION: ## Show the version string along with build metadata
@@ -50,7 +48,7 @@ dist/artifact.tar.gz: bin/artifact.sh local.site.json
 dist/immutable.tar.gz: bin/immutable.sh local.site.json
 	./$< -s $(slugname) -t $(abspath $@) local.site.json
 
-dist/$(slugname)-$(VERSION).tar.gz: bin/release.sh $(project_files)
+dist/$(slugname)-$(VERSION).tar.gz: bin/release.sh
 	./$< -s $(slugname) -t $(abspath $@)
 
 .PHONY: start

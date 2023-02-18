@@ -14,10 +14,8 @@ slugname := {{ cookiecutter.slugname }}
 
 DOCKER := docker
 
-project_files := package.json Dockerfile package-lock.json postcss.config.js custom-properties-selector.cjs $(shell find src/ -type f)
-
 # The hash string could be used for cache-busting.
-HASH := $(shell cat $(project_files) | md5sum - | cut -d' ' -f1)
+HASH := $(shell find . -type f \( -path './package.json' -o -path './Dockerfile' -o -path './package-lock.json' -o -path './postcss.config.js' -o -path './custom-properties-selector.cjs' -o -path './src/*' \) -exec md5sum '{}' \; | sort | md5sum - | cut -d' ' -f1)
 
 # For debugging what is set in variables
 inspect.%:
@@ -27,7 +25,7 @@ inspect.%:
 # Use $* to get the stem
 FORCE:
 
-objects := package-lock.json .dist
+objects := package-lock.json .dist-$(HASH)
 
 .PHONY: all
 all: $(objects) ## Default is to make all dist files
@@ -37,9 +35,9 @@ help: ## Show this help
 	@egrep -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: dist
-dist: .dist ## Create dist/* files for distribution
+dist: .dist-$(HASH) ## Create dist/* files for distribution
 
-.dist: local-scripts/local-build.sh $(project_files)
+.dist-$(HASH): local-scripts/local-build.sh
 	./$< -s $(slugname) -a $(app_name) -p $(project_dir)
 	@touch $@
 
