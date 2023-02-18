@@ -14,7 +14,7 @@ name_hash="$(printf "%s" "$script_dir" | md5sum | cut -d' ' -f1)"
 usage() {
   cat <<HERE
 Update the python requirement txt files, check for known vulnerabilities,
-download local python packages to dist/python/.
+download local python packages to dep/ directory.
 
 Usage:
   $script_name -h
