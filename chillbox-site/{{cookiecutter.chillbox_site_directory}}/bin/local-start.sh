@@ -189,11 +189,13 @@ for worker_json_obj in "$@"; do
   worker_lang=""
   worker_name=""
   secrets_config=""
+  worker_run_cmd=""
   eval "$(echo "$worker_json_obj" | jq -r '@sh "
     worker_handler=\(.handler)
     worker_lang=\(.lang)
     worker_name=\(.name)
     secrets_config=\(.secrets_config // "")
+    worker_run_cmd=\(."run-cmd")
     "')"
   echo "$worker_handler $worker_name $worker_lang"
   eval "$(echo "$worker_json_obj" | jq -r '.environment // [] | .[] | "export " + .name + "=" + (.value | @sh)' \
@@ -223,6 +225,7 @@ for worker_json_obj in "$@"; do
       echo "INFO $script_name: Building docker image: $image_name"
       DOCKER_BUILDKIT=1 docker build \
         --quiet \
+        --build-arg RUN_DEV_CMD="$worker_run_cmd" \
         -t "$image_name" \
         "$project_dir/$worker_handler" > /dev/null
       docker run -d --tty \

@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "{{ cookiecutter.slugname }}-{{ cookiecutter.project_slug }}"
+version = "0.0.1"
+description = "Python Worker {{ cookiecutter.slugname }} {{ cookiecutter.project_slug }}"
+readme = "README.md"
+requires-python = ">=3.9, <4"
+
+# TO{# #}DO: Example of adding dependencies for a worker that uses arq.
+# dependencies = [
+#     "arq",
+#     "redis[hiredis]",
+#     "httpx",
+# ]
+
+[project.optional-dependencies]
+test = [
+    "coverage",
+    "pytest",
+]
+
+[project.scripts]
+start = "{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}.script:main"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+]

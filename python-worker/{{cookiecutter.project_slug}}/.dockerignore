@@ -1,0 +1,12 @@
+# {{ cookiecutter.template_file_comment }}
+
+*
+!/requirements.txt
+!/pip-requirements.txt
+!/verify-run-audit.sh
+!/pyproject.toml
+!/src/*
+!/README.md
+!/secrets.sh
+!/tests/*
+!/dep/*

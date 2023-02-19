@@ -1,0 +1,20 @@
+
+# UPKEEP due: "2023-05-15" label: "Python pip" interval: "+3 months"
+# https://pypi.org/project/pip/
+pip==23.0
+
+# UPKEEP due: "2023-05-15" label: "Python wheel" interval: "+3 months"
+# https://pypi.org/project/wheel/
+wheel==0.38.4
+
+# UPKEEP due: "2023-05-15" label: "Python hatchling" interval: "+3 months"
+# https://pypi.org/project/hatchling/
+hatchling==1.13.0
+
+# UPKEEP due: "2023-05-15" label: "Python setuptools" interval: "+3 months"
+# https://pypi.org/project/setuptools/
+setuptools==67.3.2
+
+# UPKEEP due: "2023-05-15" label: "Python Cython" interval: "+3 months"
+# https://pypi.org/project/Cython/
+Cython==0.29.33
