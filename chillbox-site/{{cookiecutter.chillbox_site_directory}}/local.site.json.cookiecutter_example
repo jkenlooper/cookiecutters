@@ -222,6 +222,25 @@
   "crontab": [
     "13 5 * * 6 echo 'do something'"
   ],
+  "workers": [
+    {
+      "name": "worker",
+      "lang": "python-worker",
+      "handler": "worker",
+      "secrets_config": "worker.secrets.cfg",
+      "secrets_export_dockerfile": "secrets.Dockerfile",
+      "niceness": 0,
+      "count": 1,
+      "run-cmd": "arq",
+      "manifest": "MANIFEST",
+      "environment": [
+        {
+          "name": "VIRTUAL_ENV_BIN",
+          "value": "/usr/local/src/$SLUGNAME/worker/.venv/bin"
+        }
+      ]
+    }
+  ],
   "services": [
     {
       "name": "design-tokens",

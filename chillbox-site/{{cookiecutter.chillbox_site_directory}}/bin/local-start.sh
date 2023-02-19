@@ -25,7 +25,7 @@ Options:
   -s <slugname>       Set the slugname.
 
 Args:
-  <site_json_file>    Site json file with services.
+  <site_json_file>    Site json file with services and workers.
 
 HERE
 }
@@ -178,6 +178,103 @@ has_redis="$(jq -r -e 'has("redis")' "$site_json_file" || printf "false")"
 if [ "$has_redis" = "true" ]; then
   "$script_dir/local-redis.sh" -s "$slugname" "$site_json_file"
 fi
+
+
+workers="$(jq -c '.workers // [] | .[]' "$modified_site_json_file")"
+IFS="$(printf '\n ')" && IFS="${IFS% }"
+#shellcheck disable=SC2086
+set -f -- $workers
+for worker_json_obj in "$@"; do
+  worker_handler=""
+  worker_lang=""
+  worker_name=""
+  secrets_config=""
+  eval "$(echo "$worker_json_obj" | jq -r '@sh "
+    worker_handler=\(.handler)
+    worker_lang=\(.lang)
+    worker_name=\(.name)
+    secrets_config=\(.secrets_config // "")
+    "')"
+  echo "$worker_handler $worker_name $worker_lang"
+  eval "$(echo "$worker_json_obj" | jq -r '.environment // [] | .[] | "export " + .name + "=" + (.value | @sh)' \
+    | "$script_dir/envsubst-site-env.sh" -c "$modified_site_json_file")"
+  tmp_worker_env_vars_file="$(mktemp)"
+  echo "$worker_json_obj" | jq -r '.environment // [] | .[] | .name + "=" + .value' \
+    | "$script_dir/envsubst-site-env.sh" -c "$modified_site_json_file" > "$tmp_worker_env_vars_file"
+
+  image_name="$(printf '%s' "$slugname-$worker_handler-$project_name_hash" | grep -o -E '^.{0,63}')"
+  container_name="$(printf '%s' "$slugname-$worker_name-$project_name_hash" | grep -o -E '^.{0,63}')"
+
+  echo "DEBUG worker $worker_json_obj"
+  # The ports on these do not need to be exposed since nginx is in front of them.
+  case "$worker_lang" in
+
+    python-worker)
+      if [ -n "$secrets_config" ] && [ ! -s "$not_encrypted_secrets_dir/$worker_handler/$secrets_config" ]; then
+        "$script_dir/local-secrets.sh" -s "$slugname" "$modified_site_json_file"
+        test -s "$not_encrypted_secrets_dir/$worker_handler/$secrets_config" || (echo "ERROR $script_name: Failed to create the file $not_encrypted_secrets_dir/$worker_handler/$secrets_config" && exit 1)
+      else
+        # Just create an empty file so the container mount works.
+        touch "$not_encrypted_secrets_dir/$worker_handler/$secrets_config"
+      fi
+
+      printf '\n\n%s\n\n' "INFO $script_name: Starting $worker_lang worker: $container_name"
+      docker image rm "$image_name" > /dev/null 2>&1 || printf ""
+      echo "INFO $script_name: Building docker image: $image_name"
+      DOCKER_BUILDKIT=1 docker build \
+        --quiet \
+        -t "$image_name" \
+        "$project_dir/$worker_handler" > /dev/null
+      docker run -d --tty \
+        --name "$container_name" \
+        --env-file "$site_env_vars_file" \
+        --env-file "$tmp_worker_env_vars_file" \
+        -e SECRETS_CONFIG="/var/lib/local-secrets/$slugname/$worker_handler/$secrets_config" \
+        --network chillboxnet \
+        --mount "type=volume,src=chillbox-local-shared,dst=/var/lib/chillbox-local-shared,readonly=true" \
+        --mount "type=bind,src=$project_dir/$worker_handler/src/${slugname}_${worker_handler},dst=/usr/local/src/app/src/${slugname}_${worker_handler},readonly" \
+        --mount "type=bind,src=$not_encrypted_secrets_dir/$worker_handler/$secrets_config,dst=/var/lib/local-secrets/$slugname/$worker_handler/$secrets_config,readonly" \
+        "$image_name" > /dev/null
+
+      container_status="$(docker container inspect "$container_name" | jq -r '.[0].State.Status')"
+      i="0"
+      while [ "$container_status" != "running" ]; do
+        i="$((i+1))"
+        test "$i" -lt "$max_number_of_checks" || break
+        sleep "$sleep_interval"
+        container_status="$(docker container inspect "$container_name" | jq -r '.[0].State.Status')"
+        if [ "$container_status" = "exited" ]; then
+          break
+        fi
+      done
+
+      if [ "$container_status" = "exited" ]; then
+        docker logs "$container_name"
+        echo "ERROR $script_name: Failed to start $worker_lang worker: $container_name"
+        echo "Start this container in interactive mode? [y/n] "
+        read -r confirm
+        if [ "$confirm" = "y" ]; then
+          printf '\n\n%s\n\n' "INFO $script_name: Debugging $worker_lang worker: $container_name"
+          docker container rm "$container_name" > /dev/null 2>&1 || printf ''
+          docker run -d --tty \
+            --name "$container_name" \
+            --user root \
+            --env-file "$site_env_vars_file" \
+            --env-file "$tmp_worker_env_vars_file" \
+            -e SECRETS_CONFIG="/var/lib/local-secrets/$slugname/$worker_handler/$secrets_config" \
+            --network chillboxnet \
+            --mount "type=volume,src=chillbox-local-shared,dst=/var/lib/chillbox-local-shared,readonly=true" \
+            --mount "type=bind,src=$project_dir/$worker_handler/src/${slugname}_${worker_handler},dst=/usr/local/src/app/src/${slugname}_${worker_handler},readonly" \
+            --mount "type=bind,src=$not_encrypted_secrets_dir/$worker_handler/$secrets_config,dst=/var/lib/local-secrets/$slugname/$worker_handler/$secrets_config,readonly" \
+            "$image_name" ./sleep.sh > /dev/null
+          echo "Running the $container_name container with root user and sleep process to keep it started."
+          echo "Use the 'docker exec' command to troubleshoot."
+        fi
+      fi
+      ;;
+  esac
+
+done
 
 services="$(jq -c '.services // [] | .[]' "$modified_site_json_file")"
 IFS="$(printf '\n ')" && IFS="${IFS% }"

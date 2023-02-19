@@ -46,7 +46,7 @@ Options:
   -s <slugname>       Set the slugname.
 
 Args:
-  <site_json_file>    Site json file with services.
+  <site_json_file>    Site json file with services or workers.
 
 HERE
 }
@@ -169,11 +169,11 @@ export DOCKER_BUILDKIT=1
 
 version="0.0.0-local+$project_name_hash"
 
-services="$(jq -c '.services // [] | .[]' "$site_json_file")"
-test -n "$services" || (echo "WARNING $script_name: No services found in $site_json_file." && exit 0)
+services_and_workers="$(jq -c '.services // [], .workers // [] | .[]' "$site_json_file")"
+test -n "$services_and_workers" || (echo "WARNING $script_name: No services or workers found in $site_json_file." && exit 0)
 IFS="$(printf '\n ')" && IFS="${IFS% }"
 #shellcheck disable=SC2086
-set -f -- $services
+set -f -- $services_and_workers
 for service_json_obj in "$@"; do
   test -n "$service_json_obj" || continue
   service_name=""

@@ -16,10 +16,10 @@ stop_and_rm_containers_silently () {
 
   # A fresh start of the containers are needed. Hide any error output and such
   # from this as it is irrelevant.
-  services="$(jq -c '.services // [] | .[]' "$site_json_file")"
+  services_and_workers="$(jq -c '.services // [], .workers // [] | .[]' "$site_json_file")"
   IFS="$(printf '\n ')" && IFS="${IFS% }"
   #shellcheck disable=SC2086
-  set -f -- $services
+  set -f -- $services_and_workers
   for service_json_obj in "$@"; do
     service_name=""
     eval "$(echo "$service_json_obj" | jq -r '@sh "
@@ -75,10 +75,10 @@ output_all_logs_on_containers () {
 
   docker logs chillbox-minio
 
-  services="$(jq -c '.services // [] | .[]' "$site_json_file")"
+  services_and_workers="$(jq -c '.services // [], .workers // [] | .[]' "$site_json_file")"
   IFS="$(printf '\n ')" && IFS="${IFS% }"
   #shellcheck disable=SC2086
-  set -f -- $services
+  set -f -- $services_and_workers
   for service_json_obj in "$@"; do
     service_name=""
     eval "$(echo "$service_json_obj" | jq -r '@sh "
@@ -110,10 +110,10 @@ all_containers_done () {
     fi
   }
 
-  services="$(jq -c '.services // [] | .[]' "$site_json_file")"
+  services_and_workers="$(jq -c '.services // [], .workers // [] | .[]' "$site_json_file")"
   IFS="$(printf '\n ')" && IFS="${IFS% }"
   #shellcheck disable=SC2086
-  set -f -- $services
+  set -f -- $services_and_workers
   for service_json_obj in "$@"; do
     service_name=""
     eval "$(echo "$service_json_obj" | jq -r '@sh "
@@ -143,10 +143,10 @@ show_container_state () {
     echo "$container_name $(docker container inspect $container_name | jq '.[0].State.Status + .[0].State.Error')"
   }
 
-  services="$(jq -c '.services // [] | .[]' "$site_json_file")"
+  services_and_workers="$(jq -c '.services // [], .workers // [] | .[]' "$site_json_file")"
   IFS="$(printf '\n ')" && IFS="${IFS% }"
   #shellcheck disable=SC2086
-  set -f -- $services
+  set -f -- $services_and_workers
   for service_json_obj in "$@"; do
     service_name=""
     eval "$(echo "$service_json_obj" | jq -r '@sh "

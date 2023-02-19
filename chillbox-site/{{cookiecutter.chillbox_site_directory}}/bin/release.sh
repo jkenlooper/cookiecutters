@@ -4,6 +4,8 @@
 
 set -o errexit
 
+# TODO: Should not require git to create a gzipped tar file.
+
 projectdir="$(dirname "$(dirname "$(realpath "$0")")")"
 script_name="$(basename "$0")"
 

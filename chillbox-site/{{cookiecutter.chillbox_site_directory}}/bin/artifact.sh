@@ -9,7 +9,7 @@ script_name="$(basename "$0")"
 usage() {
   cat <<HERE
 
-Create the archive file from the services defined in the site json file with the
+Create the archive file from the services and workers defined in the site json file with the
 exception of immutable services.
 
 Usage:
@@ -24,7 +24,7 @@ Options:
   -t <archive_file>   Set the archive tar.gz file to create.
 
 Args:
-  <site_json_file>    Site json file with services.
+  <site_json_file>    Site json file with services and workers.
 
 HERE
 }
@@ -37,10 +37,10 @@ create_archive() {
   tmpdir="$(mktemp -d)"
   mkdir -p "$tmpdir/$slugname"
 
-  mutable_services="$(jq -c '.services // [] | .[] | select(.lang != "immutable")' "$site_json_file")"
+  mutable_services_and_workers="$(jq -c '.services // [], .workers // [] | .[] | select(.lang != "immutable")' "$site_json_file")"
   IFS="$(printf '\n ')" && IFS="${IFS% }"
   #shellcheck disable=SC2086
-  set -f -- $mutable_services
+  set -f -- $mutable_services_and_workers
   for service_json_obj in "$@"; do
     service_name=""
     service_handler=""
