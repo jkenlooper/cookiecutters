@@ -11,8 +11,13 @@
   ],
   "env": [
     {
+      "name": "REDIS_HOST",
+      "value": "",
+      "cmd": "printf '%s' \"$SLUGNAME-redis-$PROJECT_NAME_HASH\" | grep -o -E '^.{0,63}'"
+    },
+    {
       "name": "REDIS_URL_DEFAULT_USER",
-      "value": "redis://$SLUGNAME-redis-$PROJECT_NAME_HASH:$REDIS_PORT?db=0"
+      "value": "redis://$REDIS_HOST:38009?db=0"
     },
     {
       "name": "CHILL_STATIC_TRY_FILES_LAST_PARAM",
