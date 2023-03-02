@@ -82,6 +82,8 @@ MEOW
 # shellcheck disable=SC1091
 . "$chillbox_config_file"
 
+{{ 'chillbox_subnet="$(docker network inspect chillboxnet --format "{{range .IPAM.Config}}{{print .Subnet}}{{end}}")"' }}
+
 cat <<MEOW > "$site_env"
 export ARTIFACT_BUCKET_NAME=chillboxartifact
 export CHILLBOX_SERVER_NAME=chillbox.test
@@ -92,6 +94,7 @@ export ACME_SERVER=letsencrypt_test
 export S3_ENDPOINT_URL=http://chillbox-minio:9000
 # SERVER_NAME is set to empty string so nginx will not require Host header; which is useful for local development.
 export SERVER_NAME='""'
+export CHILLBOX_SUBNET="$chillbox_subnet"
 export SERVER_PORT=$app_port
 export SLUGNAME=$slugname
 export TECH_EMAIL=llama@local.test
@@ -158,6 +161,7 @@ S3_ENDPOINT_URL=http://chillbox-minio:9000
 # Not setting server_name to allow it to be set differently in each Dockerfile
 # if needed.
 #SERVER_NAME=
+CHILLBOX_SUBNET=$chillbox_subnet
 SERVER_PORT=$app_port
 SLUGNAME=$slugname
 TECH_EMAIL=llama@local.test
@@ -346,7 +350,7 @@ for service_json_obj in "$@"; do
         --name "$container_name" \
         --env-file "$site_env_vars_file" \
         --env-file "$tmp_service_env_vars_file" \
-        -e HOST="localhost" \
+        -e HOST="0.0.0.0" \
         -e SECRETS_CONFIG="/var/lib/local-secrets/$slugname/$service_handler/$secrets_config" \
         --network chillboxnet \
         --mount "type=volume,src=chillbox-local-shared,dst=/var/lib/chillbox-local-shared,readonly=true" \
@@ -379,7 +383,7 @@ for service_json_obj in "$@"; do
             --user root \
             --env-file "$site_env_vars_file" \
             --env-file "$tmp_service_env_vars_file" \
-            -e HOST="localhost" \
+            -e HOST="0.0.0.0" \
             -e SECRETS_CONFIG="/var/lib/local-secrets/$slugname/$service_handler/$secrets_config" \
             --network chillboxnet \
             --mount "type=volume,src=chillbox-local-shared,dst=/var/lib/chillbox-local-shared,readonly=true" \
