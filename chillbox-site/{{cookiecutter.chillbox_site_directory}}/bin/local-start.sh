@@ -92,8 +92,7 @@ export IMMUTABLE_BUCKET_DOMAIN_NAME=chillbox-minio:9000
 export IMMUTABLE_BUCKET_NAME=chillboximmutable
 export ACME_SERVER=letsencrypt_test
 export S3_ENDPOINT_URL=http://chillbox-minio:9000
-# SERVER_NAME is set to empty string so nginx will not require Host header; which is useful for local development.
-export SERVER_NAME='""'
+export SERVER_NAME=localhost
 export CHILLBOX_SUBNET="$chillbox_subnet"
 export SERVER_PORT=$app_port
 export SLUGNAME=$slugname
@@ -158,9 +157,7 @@ IMMUTABLE_BUCKET_DOMAIN_NAME=chillbox-minio:9000
 IMMUTABLE_BUCKET_NAME=chillboximmutable
 ACME_SERVER=letsencrypt_test
 S3_ENDPOINT_URL=http://chillbox-minio:9000
-# Not setting server_name to allow it to be set differently in each Dockerfile
-# if needed.
-#SERVER_NAME=
+SERVER_NAME=localhost
 CHILLBOX_SUBNET=$chillbox_subnet
 SERVER_PORT=$app_port
 SLUGNAME=$slugname
@@ -350,7 +347,7 @@ for service_json_obj in "$@"; do
         --name "$container_name" \
         --env-file "$site_env_vars_file" \
         --env-file "$tmp_service_env_vars_file" \
-        -e HOST="0.0.0.0" \
+        -e BIND="0.0.0.0:$PORT" \
         -e SECRETS_CONFIG="/var/lib/local-secrets/$slugname/$service_handler/$secrets_config" \
         --network chillboxnet \
         --mount "type=volume,src=chillbox-local-shared,dst=/var/lib/chillbox-local-shared,readonly=true" \
@@ -383,7 +380,7 @@ for service_json_obj in "$@"; do
             --user root \
             --env-file "$site_env_vars_file" \
             --env-file "$tmp_service_env_vars_file" \
-            -e HOST="0.0.0.0" \
+            -e BIND="0.0.0.0:$PORT" \
             -e SECRETS_CONFIG="/var/lib/local-secrets/$slugname/$service_handler/$secrets_config" \
             --network chillboxnet \
             --mount "type=volume,src=chillbox-local-shared,dst=/var/lib/chillbox-local-shared,readonly=true" \

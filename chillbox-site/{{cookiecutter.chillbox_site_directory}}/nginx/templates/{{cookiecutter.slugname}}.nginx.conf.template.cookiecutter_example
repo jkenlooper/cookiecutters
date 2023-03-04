@@ -46,11 +46,25 @@ server {
   }
 
   location ${API_PATH} {
-    proxy_pass ${API_SCHEME}://${API_HOST}:$API_PORT/;
+    proxy_pass ${API_SCHEME}://${API_HOST}:$API_PORT;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header X-Forwarded-Host $host;
     proxy_set_header X-Forwarded-Prefix /;
+  }
+
+  # /api/internal/start-job-with-worker/example/
+  location ${API_PATH}internal/ {
+    # Only accessed from localhost
+    allow ${CHILLBOX_SUBNET};
+    deny all;
+    proxy_set_header X-Forwarded-Host localhost;
+
+    proxy_pass ${API_SCHEME}://${API_HOST}:${API_PORT};
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Prefix /;
+    proxy_redirect default;
   }
 
   location ${IMMUTABLE_EXAMPLE_PATH} {

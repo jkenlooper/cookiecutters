@@ -11,13 +11,30 @@
   ],
   "env": [
     {
+      "name": "NGINX_HOST",
+      "value": "",
+      "cmd": "printf '%s' \"$SLUGNAME-nginx-$PROJECT_NAME_HASH\" | grep -o -E '^.{0,63}'"
+    },
+    {
+      "name": "NGINX_HOST__chillbox",
+      "value": "localhost"
+    },
+    {
       "name": "REDIS_HOST",
       "value": "",
       "cmd": "printf '%s' \"$SLUGNAME-redis-$PROJECT_NAME_HASH\" | grep -o -E '^.{0,63}'"
     },
     {
+      "name": "REDIS_HOST__chillbox",
+      "value": "not-applicable"
+    },
+    {
       "name": "REDIS_URL_DEFAULT_USER",
       "value": "redis://$REDIS_HOST:38009?db=0"
+    },
+    {
+      "name": "REDIS_URL_DEFAULT_USER__chillbox",
+      "value": "unix:///run/redis/$SLUGNAME.sock?db=0"
     },
     {
       "name": "CHILL_STATIC_TRY_FILES_LAST_PARAM",
@@ -225,7 +242,7 @@
     "maxmemory-policy": "allkeys-lfu"
   },
   "crontab": [
-    "13 5 * * 6 echo 'do something'"
+    "*/5 * * * * wget -qS --header 'Host: $SERVER_NAME:$SERVER_PORT' --post-data '' --no-check-certificate -O - http://$NGINX_HOST:$SERVER_PORT/api/internal/start-job-with-worker/example/"
   ],
   "workers": [
     {
@@ -305,10 +322,6 @@
       "log_level": "debug",
       "manifest": "MANIFEST",
       "environment": [
-        {
-          "name": "HOST",
-          "value": "$API_HOST"
-        },
         {
           "name": "PORT",
           "value": "$API_PORT"

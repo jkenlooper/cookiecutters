@@ -16,8 +16,7 @@ ENV IMMUTABLE_BUCKET_DOMAIN_NAME=chillbox-minio:9000
 ENV ARTIFACT_BUCKET_NAME=chillboxartifact
 ENV SLUGNAME={{ cookiecutter.slugname }}
 ENV VERSION=0
-# SERVER_NAME is set to empty string so nginx will not require Host header; which is useful for local development.
-ENV SERVER_NAME='""'
+ENV SERVER_NAME=localhost
 ENV SERVER_PORT=80
 
 WORKDIR /build
