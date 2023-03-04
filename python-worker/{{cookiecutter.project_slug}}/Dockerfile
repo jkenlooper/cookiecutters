@@ -75,6 +75,14 @@ chmod 0600 /home/dev/.aws/credentials
 chown dev:dev /home/dev/.aws/credentials
 SUPPORT_LOCAL_S3
 
+RUN <<FILEWATCH_SUPPORT
+# Support for doing local development
+set -o errexit
+apk update
+apk add --no-cache \
+  entr
+FILEWATCH_SUPPORT
+
 USER dev
 
 # The dep directory should include the wheels and other source packages
@@ -82,6 +90,8 @@ USER dev
 COPY --chown=dev:dev dep /usr/local/src/app/dep
 
 COPY --chown=dev:dev requirements.txt /usr/local/src/app/requirements.txt
+COPY --chown=dev:dev requirements-dev.txt /usr/local/src/app/requirements-dev.txt
+COPY --chown=dev:dev requirements-test.txt /usr/local/src/app/requirements-test.txt
 COPY --chown=dev:dev pyproject.toml /usr/local/src/app/pyproject.toml
 COPY --chown=dev:dev README.md /usr/local/src/app/README.md
 RUN <<PIP_INSTALL_APP
@@ -90,11 +100,19 @@ set -o errexit
 set -x
 
 # Only pip install with the local python packages cache.
-# This uses the pyproject.toml instead of the requirements.txt since this is for
-# development.
 python -m pip install --disable-pip-version-check --compile \
   --no-index \
+  --no-build-isolation \
   -r /usr/local/src/app/requirements.txt
+python -m pip install --disable-pip-version-check --compile \
+  --no-index \
+  --no-build-isolation \
+  -r /usr/local/src/app/requirements-dev.txt
+python -m pip install --disable-pip-version-check --compile \
+  --no-index \
+  --no-build-isolation \
+  -r /usr/local/src/app/requirements-test.txt
+# Install app source code in editable mode (-e) for local development.
 python -m pip install --disable-pip-version-check --compile \
   --no-index \
   --no-build-isolation \
@@ -128,7 +146,7 @@ done
 SLEEP_SH
 chmod +x sleep.sh
 
-cat <<RELOADER_SH > /usr/local/src/app/reloader.sh
+cat <<DEV_RUN_CMD_SH > /usr/local/src/app/dev-run-cmd.sh
 #!/usr/bin/env sh
 
 set -o errexit
@@ -139,6 +157,42 @@ set -o errexit
 export VIRTUAL_ENV_BIN="${VIRTUAL_ENV}/bin"
 
 $RUN_DEV_CMD
+
+DEV_RUN_CMD_SH
+chmod +x /usr/local/src/app/dev-run-cmd.sh
+
+cat <<'RELOADER_SH' > /usr/local/src/app/reloader.sh
+#!/usr/bin/env sh
+
+set -o errexit
+
+tmp_watch_files="$(mktemp)"
+cleanup() {
+  rm -f "$tmp_watch_files"
+}
+trap cleanup EXIT INT HUP TERM
+
+watch_files() {
+  find "/usr/local/src/app/src/{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}" > "$tmp_watch_files"
+  cat "$tmp_watch_files" | entr -rdn /usr/local/src/app/dev-run-cmd.sh
+}
+
+while true; do
+  set +o errexit
+  watch_files
+  exit_wf="$?"
+  set -o errexit
+  if [ "$exit_wf" = "0" ]; then
+    echo "INFO $script_name: Exiting."
+    exit "$exit_wf"
+  elif [ "$exit_wf" = "1" ] || [ "$exit_wf" = "2" ]; then
+    echo "INFO $script_name: waiting 2 seconds before watching files again. Hit Ctrl-C to exit."
+    sleep 2
+  else
+    echo "INFO $script_name: Unhandled entr exit status."
+    exit "$exit_wf"
+  fi
+done
 
 RELOADER_SH
 

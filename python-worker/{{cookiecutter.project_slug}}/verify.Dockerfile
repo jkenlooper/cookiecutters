@@ -117,7 +117,7 @@ cd /home/dev/app
 python -m pip download --disable-pip-version-check \
     --exists-action i \
     --destination-directory "./dep" \
-    .
+    .[dev,test]
 PIP_INSTALL_REQ
 
 RUN <<UPDATE_REQUIREMENTS
@@ -130,6 +130,20 @@ pip-compile --generate-hashes \
     --allow-unsafe \
     --no-index --find-links="./dep" \
     --output-file ./requirements.txt \
+    pyproject.toml
+pip-compile --generate-hashes \
+    --resolver=backtracking \
+    --allow-unsafe \
+    --no-index --find-links="./dep" \
+    --extra dev \
+    --output-file ./requirements-dev.txt \
+    pyproject.toml
+pip-compile --generate-hashes \
+    --resolver=backtracking \
+    --allow-unsafe \
+    --no-index --find-links="./dep" \
+    --extra test \
+    --output-file ./requirements-test.txt \
     pyproject.toml
 UPDATE_REQUIREMENTS
 

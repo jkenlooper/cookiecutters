@@ -66,6 +66,8 @@ else
 fi
 
 docker cp "$container_name:/home/dev/app/requirements.txt" "$script_dir/requirements.txt"
+docker cp "$container_name:/home/dev/app/requirements-dev.txt" "$script_dir/requirements-dev.txt"
+docker cp "$container_name:/home/dev/app/requirements-test.txt" "$script_dir/requirements-test.txt"
 docker cp "$container_name:/home/dev/app/dep/." "$script_dir/dep/"
 # Only copy over the security issues if there are any.
 rm -f "$script_dir/security-issues-from-bandit.txt"

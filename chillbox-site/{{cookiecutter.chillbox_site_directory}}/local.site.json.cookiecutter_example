@@ -253,7 +253,7 @@
       "secrets_export_dockerfile": "secrets.Dockerfile",
       "niceness": 0,
       "count": 1,
-      "run-cmd": "python /usr/local/src/app/src/{{ cookiecutter.slugname }}_worker/script.py",
+      "run-cmd": "cd /usr/local/src/app/src/{{ cookiecutter.slugname }}_worker && arq main.WorkerSettings --watch .",
       "manifest": "MANIFEST",
       "environment": [
         {

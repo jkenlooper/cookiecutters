@@ -2,10 +2,10 @@ from time import sleep
 
 
 def main():
-    ""
+    """"""
     while True:
         sleep(1)
-        print('.')
+        print(".")
 
 
 if __name__ == "__main__":
