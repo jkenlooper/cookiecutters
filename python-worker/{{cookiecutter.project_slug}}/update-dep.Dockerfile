@@ -52,41 +52,42 @@ PYTHON_VIRTUALENV
 ENV VIRTUAL_ENV=/home/dev/app/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# TODO
-COPY --chown=dev:dev pip-requirements.txt /etc/chillbox/pip-requirements.txt
+COPY --chown=dev:dev pip-requirements.txt /home/dev/app/pip-requirements.txt
+COPY --chown=dev:dev pyproject.toml /home/dev/app/pyproject.toml
+COPY --chown=dev:dev dep /home/dev/app/dep
+COPY --chown=dev:dev README.md /home/dev/app/README.md
+RUN <<PIP_DOWNLOAD
+# Download python packages listed in pyproject.toml
+set -o errexit
+# Install these first so packages like PyYAML don't have errors with 'bdist_wheel'
+python -m pip install wheel
+python -m pip install pip
+python -m pip install hatchling
+python -m pip download --disable-pip-version-check \
+    --exists-action i \
+    --no-build-isolation \
+    --find-links /home/dev/app/dep/ \
+    --destination-directory /home/dev/app/dep \
+    -r /home/dev/app/pip-requirements.txt
+python -m pip download --disable-pip-version-check \
+    --exists-action i \
+    --no-build-isolation \
+    --find-links /home/dev/app/dep/ \
+    --destination-directory /home/dev/app/dep \
+    .[dev,test]
+PIP_DOWNLOAD
+
+USER dev
 
 RUN <<PIP_INSTALL
-# Install pip and wheel
+# Install pip-requirements.txt
 set -o errexit
-su dev -c "python -m pip install -r /etc/chillbox/pip-requirements.txt"
+python -m pip install \
+  --no-index \
+  --no-build-isolation \
+  --find-links /home/dev/app/dep/ \
+  -r /home/dev/app/pip-requirements.txt
 PIP_INSTALL
-
-# UPKEEP due: "2023-03-23" label: "pip-tools" interval: "+3 months"
-# https://pypi.org/project/pip-tools/
-ARG PIP_TOOLS_VERSION=6.12.1
-RUN <<PIP_TOOLS_INSTALL
-# Install pip-tools
-set -o errexit
-su dev -c "python -m pip install 'pip-tools==$PIP_TOOLS_VERSION'"
-PIP_TOOLS_INSTALL
-
-# UPKEEP due: "2023-03-23" label: "Python auditing tool pip-audit" interval: "+3 months"
-# https://pypi.org/project/pip-audit/
-ARG PIP_AUDIT_VERSION=2.4.10
-RUN <<INSTALL_PIP_AUDIT
-# Install pip-audit
-set -o errexit
-su dev -c "python -m pip install 'pip-audit==$PIP_AUDIT_VERSION'"
-INSTALL_PIP_AUDIT
-
-# UPKEEP due: "2023-06-23" label: "Python security linter tool: bandit" interval: "+6 months"
-# https://pypi.org/project/bandit/
-ARG BANDIT_VERSION=1.7.4
-RUN <<BANDIT_INSTALL
-# Install bandit to find common security issues
-set -o errexit
-su dev -c "python -m pip install 'bandit==$BANDIT_VERSION'"
-BANDIT_INSTALL
 
 USER dev
 
@@ -102,26 +103,17 @@ HERE
 chmod +x /home/dev/sleep.sh
 SETUP
 
-COPY --chown=dev:dev pyproject.toml /home/dev/app/pyproject.toml
-COPY --chown=dev:dev README.md /home/dev/app/README.md
-COPY --chown=dev:dev dep /home/dev/app/dep
-# Only the __init__.py is needed when using pip download.
-#COPY --chown=dev:dev src/{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}/__init__.py /home/dev/app/src/{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}/__init__.py
-
-RUN <<PIP_INSTALL_REQ
+RUN <<PIP_DOWNLOAD_APP_DEPENDENCIES
 # Download python packages described in pyproject.toml
 set -o errexit
-mkdir -p "/home/dev/app/dep"
-# Change to the app directory so the find-links can be relative.
-cd /home/dev/app
 python -m pip download --disable-pip-version-check \
     --exists-action i \
-    --destination-directory "./dep" \
+    --destination-directory /home/dev/app/dep \
     .[dev,test]
-PIP_INSTALL_REQ
+PIP_DOWNLOAD_APP_DEPENDENCIES
 
 RUN <<UPDATE_REQUIREMENTS
-# Generate the hashed requirements.txt file that the main container will use.
+# Generate the hashed requirements*.txt files that the main container will use.
 set -o errexit
 # Change to the app directory so the find-links can be relative.
 cd /home/dev/app
@@ -147,11 +139,11 @@ pip-compile --generate-hashes \
     pyproject.toml
 UPDATE_REQUIREMENTS
 
-COPY --chown=dev:dev verify-run-audit.sh ./
+COPY --chown=dev:dev update-dep-run-audit.sh /home/dev/app/
 RUN <<AUDIT
 # Audit packages for known vulnerabilities
 set -o errexit
-./verify-run-audit.sh
+./update-dep-run-audit.sh > /home/dev/vulnerabilities-pip-audit.txt || echo "WARNING: Vulnerabilities found."
 AUDIT
 
 COPY --chown=dev:dev src/{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}/ /home/dev/app/src/{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}/

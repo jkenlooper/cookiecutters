@@ -12,7 +12,7 @@ addgroup -g 44444 dev
 adduser -u 44444 -G dev -s /bin/sh -D dev
 DEV_USER
 
-WORKDIR /usr/local/src/app/
+WORKDIR /home/dev/app
 
 # UPKEEP due: "2023-03-23" label: "Chillbox cli shared scripts" interval: "+3 months"
 # https://github.com/jkenlooper/chillbox
@@ -44,22 +44,38 @@ SERVICE_DEPENDENCIES
 RUN  <<PYTHON_VIRTUALENV
 # Setup for python virtual env
 set -o errexit
-mkdir -p /usr/local/src/app
-chown -R dev:dev /usr/local/src/app
-su dev -c '/usr/bin/python3 -m venv /usr/local/src/app/.venv'
+mkdir -p /home/dev/app
+chown -R dev:dev /home/dev/app
+su dev -c '/usr/bin/python3 -m venv /home/dev/app/.venv'
 PYTHON_VIRTUALENV
 # Activate python virtual env by updating the PATH
-ENV VIRTUAL_ENV=/usr/local/src/app/.venv
+ENV VIRTUAL_ENV=/home/dev/app/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# TODO
-COPY --chown=dev:dev pip-requirements.txt /etc/chillbox/pip-requirements.txt
-
-RUN <<PIP_INSTALL
-# Install pip and wheel
+COPY --chown=dev:dev pip-requirements.txt /home/dev/app/pip-requirements.txt
+COPY --chown=dev:dev pyproject.toml /home/dev/app/pyproject.toml
+COPY --chown=dev:dev dep /home/dev/app/dep
+COPY --chown=dev:dev README.md /home/dev/app/README.md
+RUN <<PIP_DOWNLOAD
+# Download python packages listed in pyproject.toml
 set -o errexit
-su dev -c "python -m pip install -r /etc/chillbox/pip-requirements.txt"
-PIP_INSTALL
+# Install these first so packages like PyYAML don't have errors with 'bdist_wheel'
+python -m pip install wheel
+python -m pip install pip
+python -m pip install hatchling
+python -m pip download --disable-pip-version-check \
+    --exists-action i \
+    --no-build-isolation \
+    --find-links /home/dev/app/dep/ \
+    --destination-directory /home/dev/app/dep \
+    -r /home/dev/app/pip-requirements.txt
+python -m pip download --disable-pip-version-check \
+    --exists-action i \
+    --no-build-isolation \
+    --find-links /home/dev/app/dep/ \
+    --destination-directory /home/dev/app/dep \
+    .[dev,test]
+PIP_DOWNLOAD
 
 RUN <<SUPPORT_LOCAL_S3
 # Create symbolic link for /home/dev/.aws/credentials
@@ -85,56 +101,64 @@ FILEWATCH_SUPPORT
 
 USER dev
 
-# The dep directory should include the wheels and other source packages
-# created from running the verify.sh script.
-COPY --chown=dev:dev dep /usr/local/src/app/dep
-
-COPY --chown=dev:dev requirements.txt /usr/local/src/app/requirements.txt
-COPY --chown=dev:dev requirements-dev.txt /usr/local/src/app/requirements-dev.txt
-COPY --chown=dev:dev requirements-test.txt /usr/local/src/app/requirements-test.txt
-COPY --chown=dev:dev pyproject.toml /usr/local/src/app/pyproject.toml
-COPY --chown=dev:dev README.md /usr/local/src/app/README.md
-RUN <<PIP_INSTALL_APP
-# Install app in editable mode and use the local python packages.
+RUN <<PIP_INSTALL
+# Install pip-requirements.txt
 set -o errexit
-set -x
+# Install these first so packages like PyYAML don't have errors with 'bdist_wheel'
+python -m pip install wheel
+python -m pip install pip
+python -m pip install hatchling
+python -m pip install \
+  --no-index \
+  --no-build-isolation \
+  --find-links /home/dev/app/dep/ \
+  -r /home/dev/app/pip-requirements.txt
+PIP_INSTALL
+
+COPY --chown=dev:dev requirements.txt /home/dev/app/requirements.txt
+COPY --chown=dev:dev requirements-dev.txt /home/dev/app/requirements-dev.txt
+COPY --chown=dev:dev requirements-test.txt /home/dev/app/requirements-test.txt
+COPY --chown=dev:dev pyproject.toml /home/dev/app/pyproject.toml
+COPY --chown=dev:dev README.md /home/dev/app/README.md
+RUN <<PIP_INSTALL_APP
+# Install the local python packages.
+set -o errexit
 
 # Only pip install with the local python packages cache.
 python -m pip install --disable-pip-version-check --compile \
   --no-index \
   --no-build-isolation \
-  -r /usr/local/src/app/requirements.txt
+  -r /home/dev/app/requirements.txt
 python -m pip install --disable-pip-version-check --compile \
   --no-index \
   --no-build-isolation \
-  -r /usr/local/src/app/requirements-dev.txt
+  -r /home/dev/app/requirements-dev.txt
 python -m pip install --disable-pip-version-check --compile \
   --no-index \
   --no-build-isolation \
-  -r /usr/local/src/app/requirements-test.txt
-# Install app source code in editable mode (-e) for local development.
-python -m pip install --disable-pip-version-check --compile \
-  --no-index \
-  --no-build-isolation \
-  -e /usr/local/src/app
+  -r /home/dev/app/requirements-test.txt
 PIP_INSTALL_APP
 
-COPY --chown=dev:dev src /usr/local/src/app/src
+COPY --chown=dev:dev src /home/dev/app/src
+RUN <<PIP_INSTALL_SRC
+# Install app source code in editable mode (-e) for local development.
+set -o errexit
+python -m pip install --disable-pip-version-check --compile \
+  --no-index \
+  --no-build-isolation \
+  -e /home/dev/app
+PIP_INSTALL_SRC
 
 ENV SECRETS_CONFIG=""
 
-ENV API_PORT=8100
-
-ENV SERVER_NAME="localhost"
-
 # For development the app is installed in 'edit' mode. This requires that the
 # script start this way. This value is typically overridden via local.site.json.
-ARG RUN_DEV_CMD="python /usr/local/src/app/src/{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}/script.py"
+ARG RUN_DEV_CMD="python /home/dev/app/src/{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}/script.py"
 
 RUN <<FILEWATCH_SUPPORT
 # Create scripts for file watching.
 set -o errexit
-cat <<'SLEEP_SH' > /usr/local/src/app/sleep.sh
+cat <<'SLEEP_SH' > /home/dev/app/sleep.sh
 #!/usr/bin/env sh
 set -o errexit
 
@@ -146,22 +170,20 @@ done
 SLEEP_SH
 chmod +x sleep.sh
 
-cat <<DEV_RUN_CMD_SH > /usr/local/src/app/dev-run-cmd.sh
+cat <<DEV_RUN_CMD_SH > /home/dev/app/dev-run-cmd.sh
 #!/usr/bin/env sh
 
 set -o errexit
 
-# VIRTUAL_ENV_BIN can be used by gunicorn.conf.py when running commands like
-# 'flask' and others that are part of the Python virtual environment.
 # Override any existing VIRTUAL_ENV_BIN here when running this locally.
 export VIRTUAL_ENV_BIN="${VIRTUAL_ENV}/bin"
 
 $RUN_DEV_CMD
 
 DEV_RUN_CMD_SH
-chmod +x /usr/local/src/app/dev-run-cmd.sh
+chmod +x /home/dev/app/dev-run-cmd.sh
 
-cat <<'RELOADER_SH' > /usr/local/src/app/reloader.sh
+cat <<'RELOADER_SH' > /home/dev/app/reloader.sh
 #!/usr/bin/env sh
 
 set -o errexit
@@ -173,8 +195,8 @@ cleanup() {
 trap cleanup EXIT INT HUP TERM
 
 watch_files() {
-  find "/usr/local/src/app/src/{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}" > "$tmp_watch_files"
-  cat "$tmp_watch_files" | entr -rdn /usr/local/src/app/dev-run-cmd.sh
+  find "/home/dev/app/src/{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}" > "$tmp_watch_files"
+  cat "$tmp_watch_files" | entr -rdn /home/dev/app/dev-run-cmd.sh
 }
 
 while true; do
@@ -200,4 +222,4 @@ chmod +x reloader.sh
 FILEWATCH_SUPPORT
 
 
-CMD ["/usr/local/src/app/reloader.sh"]
+CMD ["/home/dev/app/reloader.sh"]
