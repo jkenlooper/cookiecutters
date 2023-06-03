@@ -82,6 +82,7 @@ MEOW
 # shellcheck disable=SC1091
 . "$chillbox_config_file"
 
+docker network create chillboxnet > /dev/null 2>&1 || printf ""
 {{ 'chillbox_subnet="$(docker network inspect chillboxnet --format "{{range .IPAM.Config}}{{print .Subnet}}{{end}}")"' }}
 
 cat <<MEOW > "$site_env"
