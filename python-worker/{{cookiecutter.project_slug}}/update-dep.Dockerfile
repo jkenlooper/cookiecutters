@@ -56,6 +56,9 @@ COPY --chown=dev:dev pip-requirements.txt /home/dev/app/pip-requirements.txt
 COPY --chown=dev:dev pyproject.toml /home/dev/app/pyproject.toml
 COPY --chown=dev:dev dep /home/dev/app/dep
 COPY --chown=dev:dev README.md /home/dev/app/README.md
+
+USER dev
+
 RUN <<PIP_DOWNLOAD
 # Download python packages listed in pyproject.toml
 set -o errexit
@@ -77,8 +80,6 @@ python -m pip download --disable-pip-version-check \
     .[dev,test]
 PIP_DOWNLOAD
 
-USER dev
-
 RUN <<PIP_INSTALL
 # Install pip-requirements.txt
 set -o errexit
@@ -88,8 +89,6 @@ python -m pip install \
   --find-links /home/dev/app/dep/ \
   -r /home/dev/app/pip-requirements.txt
 PIP_INSTALL
-
-USER dev
 
 RUN <<SETUP
 set -o errexit

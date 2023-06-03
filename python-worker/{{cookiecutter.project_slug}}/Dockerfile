@@ -41,42 +41,6 @@ apk update
 
 SERVICE_DEPENDENCIES
 
-RUN  <<PYTHON_VIRTUALENV
-# Setup for python virtual env
-set -o errexit
-mkdir -p /home/dev/app
-chown -R dev:dev /home/dev/app
-su dev -c '/usr/bin/python3 -m venv /home/dev/app/.venv'
-PYTHON_VIRTUALENV
-# Activate python virtual env by updating the PATH
-ENV VIRTUAL_ENV=/home/dev/app/.venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-COPY --chown=dev:dev pip-requirements.txt /home/dev/app/pip-requirements.txt
-COPY --chown=dev:dev pyproject.toml /home/dev/app/pyproject.toml
-COPY --chown=dev:dev dep /home/dev/app/dep
-COPY --chown=dev:dev README.md /home/dev/app/README.md
-RUN <<PIP_DOWNLOAD
-# Download python packages listed in pyproject.toml
-set -o errexit
-# Install these first so packages like PyYAML don't have errors with 'bdist_wheel'
-python -m pip install wheel
-python -m pip install pip
-python -m pip install hatchling
-python -m pip download --disable-pip-version-check \
-    --exists-action i \
-    --no-build-isolation \
-    --find-links /home/dev/app/dep/ \
-    --destination-directory /home/dev/app/dep \
-    -r /home/dev/app/pip-requirements.txt
-python -m pip download --disable-pip-version-check \
-    --exists-action i \
-    --no-build-isolation \
-    --find-links /home/dev/app/dep/ \
-    --destination-directory /home/dev/app/dep \
-    .[dev,test]
-PIP_DOWNLOAD
-
 RUN <<SUPPORT_LOCAL_S3
 # Create symbolic link for /home/dev/.aws/credentials
 set -o errexit
@@ -99,7 +63,44 @@ apk add --no-cache \
   entr
 FILEWATCH_SUPPORT
 
+RUN  <<PYTHON_VIRTUALENV
+# Setup for python virtual env
+set -o errexit
+mkdir -p /home/dev/app
+chown -R dev:dev /home/dev/app
+su dev -c 'python -m venv /home/dev/app/.venv'
+PYTHON_VIRTUALENV
+# Activate python virtual env by updating the PATH
+ENV VIRTUAL_ENV=/home/dev/app/.venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+COPY --chown=dev:dev pip-requirements.txt /home/dev/app/pip-requirements.txt
+COPY --chown=dev:dev pyproject.toml /home/dev/app/pyproject.toml
+COPY --chown=dev:dev dep /home/dev/app/dep
+COPY --chown=dev:dev README.md /home/dev/app/README.md
+
 USER dev
+
+RUN <<PIP_DOWNLOAD
+# Download python packages listed in pyproject.toml
+set -o errexit
+# Install these first so packages like PyYAML don't have errors with 'bdist_wheel'
+python -m pip install wheel
+python -m pip install pip
+python -m pip install hatchling
+python -m pip download --disable-pip-version-check \
+    --exists-action i \
+    --no-build-isolation \
+    --find-links /home/dev/app/dep/ \
+    --destination-directory /home/dev/app/dep \
+    -r /home/dev/app/pip-requirements.txt
+python -m pip download --disable-pip-version-check \
+    --exists-action i \
+    --no-build-isolation \
+    --find-links /home/dev/app/dep/ \
+    --destination-directory /home/dev/app/dep \
+    .[dev,test]
+PIP_DOWNLOAD
 
 RUN <<PIP_INSTALL
 # Install pip-requirements.txt
