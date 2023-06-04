@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "{{ cookiecutter.slugname }}-{{ cookiecutter.project_slug }}"
+version = "0.0.1"
+description = "Python Service {{ cookiecutter.slugname }} {{ cookiecutter.project_slug }}"
+readme = "README.md"
+requires-python = ">=3.9, <4"
+
+# TO{# #}DO: Example of adding dependencies for a service that uses arq.
+dependencies = [
+    # arq version must be the same that other services or workers have
+    "arq==0.25.0",
+    "redis[hiredis]",
+
+    "flask>=2.2",
+
+]
+
+[project.optional-dependencies]
+test = [
+    "coverage",
+    "pytest",
+]
+dev = [
+    # watchfiles is only needed by arq when developing locally.
+    "watchfiles",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+]
