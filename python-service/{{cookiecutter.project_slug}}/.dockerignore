@@ -12,3 +12,4 @@
 !/secrets.sh
 !/tests/*
 !/dep/*
+!/gunicorn.conf.py

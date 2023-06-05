@@ -48,7 +48,6 @@ mkdir -p "$script_dir/dep"
 image_name="update-dep-$name_hash"
 docker image rm "$image_name" > /dev/null 2>&1 || printf ""
 DOCKER_BUILDKIT=1 docker build \
-  --quiet \
   -t "$image_name" \
   -f "$script_dir/update-dep.Dockerfile" \
   "$script_dir" > /dev/null
@@ -66,6 +65,7 @@ else
     "$image_name" > /dev/null
 fi
 
+set -x
 docker cp --quiet "$container_name:/home/dev/app/requirements.txt" "$script_dir/requirements.txt"
 docker cp --quiet "$container_name:/home/dev/app/requirements-dev.txt" "$script_dir/requirements-dev.txt"
 docker cp --quiet "$container_name:/home/dev/app/requirements-test.txt" "$script_dir/requirements-test.txt"

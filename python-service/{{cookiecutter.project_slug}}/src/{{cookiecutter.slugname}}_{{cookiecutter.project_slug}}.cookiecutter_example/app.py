@@ -10,7 +10,7 @@ def create_app(test_config=None):
     # create and configure the app
     app = Flask(
         __name__,
-        instance_path="/var/lib/{{ cookiecutter.slugname }}/{{ cookiecutter.project_slug }}/"
+        instance_path="/var/lib/{{ cookiecutter.slugname }}/{{ cookiecutter.project_slug }}/",
         instance_relative_config=False,
     )
 
@@ -31,17 +31,9 @@ def create_app(test_config=None):
             # The SECRETS_CONFIG is set like this:
             # /run/tmp/chillbox_secrets/$SLUGNAME/$service_handler/$service_secrets_config
             app.config.from_envvar("SECRETS_CONFIG", silent=False)
-            if not app.config.get("ANSWER1"):
+            if not app.config.get("EXAMPLE_SECRET"):
                 raise ValueError(
-                    f"No ANSWER1 set in {os.environ.get('SECRETS_CONFIG')}."
-                )
-            if not app.config.get("ANSWER2"):
-                raise ValueError(
-                    f"No ANSWER2 set in {os.environ.get('SECRETS_CONFIG')}."
-                )
-            if not app.config.get("ANSWER5"):
-                raise ValueError(
-                    f"No ANSWER5 set in {os.environ.get('SECRETS_CONFIG')}."
+                    f"No EXAMPLE_SECRET set in {os.environ.get('SECRETS_CONFIG')}."
                 )
 
     else:
@@ -60,9 +52,7 @@ def create_app(test_config=None):
     def healthcheck():
         has_secrets = all(
             [
-                app.config.get("ANSWER1"),
-                app.config.get("ANSWER2"),
-                app.config.get("ANSWER5"),
+                app.config.get("EXAMPLE_SECRET"),
             ]
         )
         return f"Okay. Secrets: {has_secrets}"

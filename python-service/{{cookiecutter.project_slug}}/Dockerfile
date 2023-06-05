@@ -48,9 +48,6 @@ set -o errexit
 # Support an app instance_path (Mostly for Flask).
 mkdir -p /var/lib/{{ cookiecutter.slugname }}/{{ cookiecutter.project_slug }}/
 chown -R dev:dev /var/lib/{{ cookiecutter.slugname }}/{{ cookiecutter.project_slug }}/
-
-mkdir -p /usr/local/src/app
-chown -R dev:dev /usr/local/src/app
 FLASK_SETUP
 
 RUN <<SUPPORT_LOCAL_S3
@@ -133,7 +130,7 @@ COPY --chown=dev:dev requirements-dev.txt /home/dev/app/requirements-dev.txt
 COPY --chown=dev:dev requirements-test.txt /home/dev/app/requirements-test.txt
 COPY --chown=dev:dev pyproject.toml /home/dev/app/pyproject.toml
 COPY --chown=dev:dev README.md /home/dev/app/README.md
-COPY --chown=dev:dev gunicorn.conf.py /usr/local/src/app/gunicorn.conf.py
+COPY --chown=dev:dev gunicorn.conf.py /home/dev/app/gunicorn.conf.py
 RUN <<PIP_INSTALL_APP
 # Install the local python packages.
 set -o errexit
@@ -207,7 +204,7 @@ export VIRTUAL_ENV_BIN="${VIRTUAL_ENV}/bin"
 # https://docs.gunicorn.org/en/stable/settings.html
 gunicorn \
     --config ./gunicorn.conf.py \
-    --chdir /usr/local/src/app \
+    --chdir /home/dev/app \
     --reload \
     --name {{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}_app \
     --access-logfile - \

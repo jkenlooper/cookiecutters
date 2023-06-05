@@ -241,6 +241,9 @@ for worker_json_obj in "$@"; do
         --mount "type=bind,src=$not_encrypted_secrets_dir/$worker_handler/$secrets_config,dst=/var/lib/local-secrets/$slugname/$worker_handler/$secrets_config,readonly" \
         "$image_name" > /dev/null
 
+      # Delay so the code on the worker can execute first.
+      sleep 1
+
       container_status="$(docker container inspect "$container_name" | jq -r '.[0].State.Status')"
       i="0"
       while [ "$container_status" != "running" ]; do
@@ -355,6 +358,9 @@ for service_json_obj in "$@"; do
         --mount "type=bind,src=$project_dir/$service_handler/src/${slugname}_${service_handler},dst=/usr/local/src/app/src/${slugname}_${service_handler},readonly" \
         --mount "type=bind,src=$not_encrypted_secrets_dir/$service_handler/$secrets_config,dst=/var/lib/local-secrets/$slugname/$service_handler/$secrets_config,readonly" \
         "$image_name" > /dev/null
+
+      # Delay so the code on the service can execute first.
+      sleep 1
 
       container_status="$(docker container inspect $container_name | jq -r '.[0].State.Status')"
       i="0"
