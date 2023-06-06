@@ -1,9 +1,10 @@
-# syntax=docker/dockerfile:1.4.3
+# syntax=docker/dockerfile:1.5.2
 
 # {{ cookiecutter.template_file_comment }}
 # Version: {{ cookiecutter._version }}
 
-FROM node:16-alpine as build
+# UPKEEP due: "2023-11-06" label: "Node.js base image" interval: "+5 months"
+FROM node:18-alpine as build
 
 # Include git command in case a dependency in package.json refers to a git
 # repository.
