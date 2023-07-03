@@ -66,14 +66,14 @@ else
 fi
 
 set -x
-docker cp --quiet "$container_name:/home/dev/app/requirements.txt" "$script_dir/requirements.txt"
-docker cp --quiet "$container_name:/home/dev/app/requirements-dev.txt" "$script_dir/requirements-dev.txt"
-docker cp --quiet "$container_name:/home/dev/app/requirements-test.txt" "$script_dir/requirements-test.txt"
-docker cp --quiet "$container_name:/home/dev/app/dep/." "$script_dir/dep/"
+docker cp "$container_name:/home/dev/app/requirements.txt" "$script_dir/requirements.txt"
+docker cp "$container_name:/home/dev/app/requirements-dev.txt" "$script_dir/requirements-dev.txt"
+docker cp "$container_name:/home/dev/app/requirements-test.txt" "$script_dir/requirements-test.txt"
+docker cp "$container_name:/home/dev/app/dep/." "$script_dir/dep/"
 # Only copy over the security issues and vulnerabilities report if there are any.
 rm -f "$script_dir/vulnerabilities-pip-audit.txt"
-docker cp --quiet "$container_name:/home/dev/vulnerabilities-pip-audit.txt" "$script_dir/vulnerabilities-pip-audit.txt" > /dev/null 2>&1 || printf ""
+docker cp "$container_name:/home/dev/vulnerabilities-pip-audit.txt" "$script_dir/vulnerabilities-pip-audit.txt" > /dev/null 2>&1 || printf ""
 rm -f "$script_dir/security-issues-from-bandit.txt"
-docker cp --quiet "$container_name:/home/dev/security-issues-from-bandit.txt" "$script_dir/security-issues-from-bandit.txt" > /dev/null 2>&1 || echo "Bandit approves!"
+docker cp "$container_name:/home/dev/security-issues-from-bandit.txt" "$script_dir/security-issues-from-bandit.txt" > /dev/null 2>&1 || echo "Bandit approves!"
 docker stop --time 0 "$container_name" > /dev/null 2>&1 || printf ""
 docker rm "$container_name" > /dev/null 2>&1 || printf ""
