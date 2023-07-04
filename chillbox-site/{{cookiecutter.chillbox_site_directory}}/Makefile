@@ -48,8 +48,8 @@ dist/artifact.tar.gz: bin/artifact.sh local.site.json
 dist/immutable.tar.gz: bin/immutable.sh local.site.json
 	./$< -s $(slugname) -t $(abspath $@) local.site.json
 
-dist/$(slugname)-$(VERSION).tar.gz: bin/release.sh
-	./$< -s $(slugname) -t $(abspath $@)
+dist/$(slugname)-$(VERSION).tar.gz: bin/release.sh MANIFEST
+	./$< -s $(slugname) -t $(abspath $@) -m MANIFEST
 
 .PHONY: start
 start: ## Start local development

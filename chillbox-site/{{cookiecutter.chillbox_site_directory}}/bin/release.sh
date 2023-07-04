@@ -16,6 +16,7 @@ as args if only needing certain files and directories added to archive file.
 Usage:
   $script_name -h
   $script_name -s <slugname> -t <release_file>
+  $script_name -s <slugname> -t <release_file> -m <manifest_file>
   $script_name -s <slugname> -t <release_file> [file paths...]
 
 Options:
@@ -30,13 +31,15 @@ HERE
 
 slugname=""
 release_file=""
+manifest=""
 
-while getopts "hs:t:" OPTION ; do
+while getopts "hs:t:m:" OPTION ; do
   case "$OPTION" in
     h) usage
        exit 0 ;;
     s) slugname=$OPTARG ;;
     t) release_file=$OPTARG ;;
+    m) manifest=$OPTARG ;;
     ?) usage
        exit 1 ;;
   esac
@@ -44,6 +47,9 @@ done
 shift $((OPTIND - 1))
 
 other_file_paths="$*"
+if [ -n "$manifest" ] && [ -f "$manifest" ]; then
+  other_file_paths="$other_file_paths $(cat "$manifest" | xargs)"
+fi
 
 test -n "$slugname" || (echo "ERROR $script_name: No slugname set." >&2 && usage && exit 1)
 test -n "$release_file" || (echo "ERROR $script_name: No release_file set." >&2 && usage && exit 1)
