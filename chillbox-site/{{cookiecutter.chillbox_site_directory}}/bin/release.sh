@@ -4,19 +4,19 @@
 
 set -o errexit
 
-# TODO: Should not require git to create a gzipped tar file.
-
 projectdir="$(dirname "$(dirname "$(realpath "$0")")")"
 script_name="$(basename "$0")"
 
 usage() {
   cat <<HERE
 
-Create the release file from the git repository working directory.
+Create the release file from the project working directory. Provide file paths
+as args if only needing certain files and directories added to archive file.
 
 Usage:
   $script_name -h
   $script_name -s <slugname> -t <release_file>
+  $script_name -s <slugname> -t <release_file> [file paths...]
 
 Options:
   -h                  Show this help message.
@@ -43,34 +43,29 @@ while getopts "hs:t:" OPTION ; do
 done
 shift $((OPTIND - 1))
 
+other_file_paths="$*"
+
 test -n "$slugname" || (echo "ERROR $script_name: No slugname set." >&2 && usage && exit 1)
 test -n "$release_file" || (echo "ERROR $script_name: No release_file set." >&2 && usage && exit 1)
 
 # release file path should be absolute
 release_file="$(realpath "$release_file")"
-echo "$release_file" | grep -q "\.tar\.gz$" || (echo "ERROR $script_name: First arg should be an release file ending with .tar.gz" && exit 1)
-
-# Requires this to be a git repository.
-test -d "$projectdir/.git" || (echo "ERROR $script_name: Must be a git repository. No directory found at $projectdir/.git" && exit 1)
-
-command -v "git" > /dev/null || (echo "ERROR $script_name: Requires 'git' command." && exit 1)
-
-git_dir_status="$(git status --short)"
-if [ -n "$git_dir_status" ]; then
-  echo "The git directory is not clean. Some files may be untracked or some files have uncommitted changes."
-  echo ""
-  echo "$git_dir_status"
-  echo ""
-  echo "Update the .gitignore for untracked files if applicable."
-  echo "ERROR $script_name: Can't create $release_file file because directory is not clean."
-  exit 1
-fi
+echo "$release_file" | grep -q "\.tar\.gz$" || (echo "ERROR $script_name: Should be a release file ending with .tar.gz" && exit 1)
 
 create_release() {
-  git archive \
-    --format=tar.gz \
-    --prefix="$slugname/" \
-    --output="$release_file" \
-    HEAD
+  tmp_release_dir="$(mktemp -d)"
+  mkdir "$tmp_release_dir/$slugname"
+  if [ -z "$other_file_paths" ]; then
+    find "$projectdir" -depth -maxdepth 1 -mindepth 1 \! -name '.git' \! -name '.hg' -exec cp -R {} -t "$tmp_release_dir/$slugname" \;
+  else
+    for fp in $other_file_paths; do
+      test -e "$projectdir/$fp" || (echo "ERROR $script_name: No file or directory at $projectdir/$fp" && exit 1)
+      cp -R "$projectdir/$fp" -t "$tmp_release_dir/$slugname"
+    done
+  fi
+  tar -c -f "$release_file" \
+    -C "$tmp_release_dir" \
+    "$slugname"
+  rm -rf "$tmp_release_dir"
 }
 create_release
