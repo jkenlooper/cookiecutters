@@ -196,7 +196,7 @@ set -o errexit
 # Override any existing VIRTUAL_ENV_BIN here when running this locally.
 export VIRTUAL_ENV_BIN="${VIRTUAL_ENV}/bin"
 
-# Setting host to 0.0.0.0 (externally visible) to work with docker network.
+# Setting bind to 0.0.0.0 (externally visible) to work with docker network.
 # The gunicorn command will use gunicorn.conf.py if it is in the same directory
 # by default. Setting it explicitly here to help show how it is being used.
 # The GUNICORN_CMD_ARGS will also be applied here if they are set. See gunicorn
@@ -208,7 +208,7 @@ gunicorn \
     --reload \
     --name {{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}_app \
     --access-logfile - \
-    --bind "0.0.0.0:$PORT" \
+    --bind "$BIND:$PORT" \
     "{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}.app:create_app()"
 
 RELOADER_SH

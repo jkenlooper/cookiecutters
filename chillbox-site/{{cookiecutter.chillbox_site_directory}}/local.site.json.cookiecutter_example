@@ -121,16 +121,12 @@
       "cmd": "printf '%s' '$SLUGNAME-immutable-example-$PROJECT_NAME_HASH' | grep -o -E '^.{0,63}'"
     },
     {
-      "name": "IMMUTABLE_EXAMPLE_HOST__chillbox",
-      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME"
-    },
-    {
       "name": "IMMUTABLE_EXAMPLE_URL",
       "value": "http://$IMMUTABLE_EXAMPLE_HOST:$IMMUTABLE_EXAMPLE_PORT/"
     },
     {
       "name": "IMMUTABLE_EXAMPLE_URL__chillbox",
-      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME/$SLUGNAME/immutable/immutable-example/$IMMUTABLE_EXAMPLE_HASH/"
+      "value": "https://s3-bucket-for-$IMMUTABLE_BUCKET_NAME/$SLUGNAME/immutable/immutable-example/$IMMUTABLE_EXAMPLE_HASH/"
     },
     {
       "name": "IMMUTABLE_EXAMPLE_HASH",
@@ -151,16 +147,12 @@
       "cmd": "printf '%s' \"$SLUGNAME-design-tokens-$PROJECT_NAME_HASH\" | grep -o -E '^.{0,63}'"
     },
     {
-      "name": "DESIGN_TOKENS_HOST__chillbox",
-      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME"
-    },
-    {
       "name": "DESIGN_TOKENS_URL",
       "value": "http://$DESIGN_TOKENS_HOST:$DESIGN_TOKENS_PORT/"
     },
     {
       "name": "DESIGN_TOKENS_URL__chillbox",
-      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME/$SLUGNAME/immutable/design-tokens/$DESIGN_TOKENS_HASH/"
+      "value": "https://s3-bucket-for-$IMMUTABLE_BUCKET_NAME/$SLUGNAME/immutable/design-tokens/$DESIGN_TOKENS_HASH/"
     },
     {
       "name": "DESIGN_TOKENS_HASH",
@@ -181,16 +173,12 @@
       "cmd": "printf '%s' \"$SLUGNAME-client-side-public-$PROJECT_NAME_HASH\" | grep -o -E '^.{0,63}'"
     },
     {
-      "name": "CLIENT_SIDE_PUBLIC_HOST__chillbox",
-      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME"
-    },
-    {
       "name": "CLIENT_SIDE_PUBLIC_URL",
       "value": "http://$CLIENT_SIDE_PUBLIC_HOST:$CLIENT_SIDE_PUBLIC_PORT/"
     },
     {
       "name": "CLIENT_SIDE_PUBLIC_URL__chillbox",
-      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME/$SLUGNAME/immutable/client-side-public/$CLIENT_SIDE_PUBLIC_HASH/"
+      "value": "https://s3-bucket-for-$IMMUTABLE_BUCKET_NAME/$SLUGNAME/immutable/client-side-public/$CLIENT_SIDE_PUBLIC_HASH/"
     },
     {
       "name": "CLIENT_SIDE_PUBLIC_HASH",
@@ -211,16 +199,12 @@
       "cmd": "printf '%s' \"$SLUGNAME-source-media-$PROJECT_NAME_HASH\" | grep -o -E '^.{0,63}'"
     },
     {
-      "name": "SOURCE_MEDIA_HOST__chillbox",
-      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME"
-    },
-    {
       "name": "SOURCE_MEDIA_URL",
       "value": "http://$SOURCE_MEDIA_HOST:$SOURCE_MEDIA_PORT/"
     },
     {
       "name": "SOURCE_MEDIA_URL__chillbox",
-      "value": "https://$IMMUTABLE_BUCKET_DOMAIN_NAME/$SLUGNAME/immutable/source-media/$SOURCE_MEDIA_HASH/"
+      "value": "https://s3-bucket-for-$IMMUTABLE_BUCKET_NAME/$SLUGNAME/immutable/source-media/$SOURCE_MEDIA_HASH/"
     },
     {
       "name": "SOURCE_MEDIA_HASH",
@@ -268,45 +252,21 @@
       "name": "design-tokens",
       "lang": "immutable",
       "handler": "design-tokens",
-      "environment": [
-        {
-          "name": "HOST",
-          "value": "$DESIGN_TOKENS_HOST"
-        }
-      ]
     },
     {
       "name": "client-side-public",
       "lang": "immutable",
       "handler": "client-side-public",
-      "environment": [
-        {
-          "name": "HOST",
-          "value": "$CLIENT_SIDE_PUBLIC_HOST"
-        }
-      ]
     },
     {
       "name": "source-media",
       "lang": "immutable",
-      "handler": "source-media",
-      "environment": [
-        {
-          "name": "HOST",
-          "value": "$SOURCE_MEDIA_HOST"
-        }
-      ]
+      "handler": "source-media"
     },
     {
       "name": "immutable-example",
       "lang": "immutable",
-      "handler": "immutable-example",
-      "environment": [
-        {
-          "name": "HOST",
-          "value": "$IMMUTABLE_EXAMPLE_HOST"
-        }
-      ]
+      "handler": "immutable-example"
     },
     {
       "name": "api",
@@ -359,15 +319,7 @@
           "value": "true"
         },
         {
-          "name": "HOST",
-          "value": "$CHILL_STATIC_HOST"
-        },
-        {
-          "name": "CHILL_HOST",
-          "value": "0.0.0.0"
-        },
-        {
-          "name": "CHILL_PORT",
+          "name": "PORT",
           "value": "$CHILL_STATIC_PORT"
         }
       ]
@@ -383,15 +335,7 @@
           "value": "false"
         },
         {
-          "name": "HOST",
-          "value": "$CHILL_DYNAMIC_HOST"
-        },
-        {
-          "name": "CHILL_HOST",
-          "value": "0.0.0.0"
-        },
-        {
-          "name": "CHILL_PORT",
+          "name": "PORT",
           "value": "$CHILL_DYNAMIC_PORT"
         },
         {

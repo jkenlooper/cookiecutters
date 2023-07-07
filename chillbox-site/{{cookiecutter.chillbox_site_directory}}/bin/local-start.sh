@@ -89,7 +89,6 @@ cat <<MEOW > "$site_env"
 export ARTIFACT_BUCKET_NAME=chillboxartifact
 export CHILLBOX_SERVER_NAME=chillbox.test
 export CHILLBOX_SERVER_PORT=80
-export IMMUTABLE_BUCKET_DOMAIN_NAME=chillbox-minio:9000
 export IMMUTABLE_BUCKET_NAME=chillboximmutable
 export ACME_SERVER=letsencrypt_test
 export S3_ENDPOINT_URL=http://chillbox-minio:9000
@@ -154,7 +153,6 @@ cat <<MEOW > "$site_env_vars_file"
 ARTIFACT_BUCKET_NAME=chillboxartifact
 CHILLBOX_SERVER_NAME=chillbox.test
 CHILLBOX_SERVER_PORT=80
-IMMUTABLE_BUCKET_DOMAIN_NAME=chillbox-minio:9000
 IMMUTABLE_BUCKET_NAME=chillboximmutable
 ACME_SERVER=letsencrypt_test
 S3_ENDPOINT_URL=http://chillbox-minio:9000
@@ -325,7 +323,7 @@ for service_json_obj in "$@"; do
         --network chillboxnet \
         --env-file "$site_env_vars_file" \
         --env-file "$tmp_service_env_vars_file" \
-        -e HOST="localhost" \
+        -e BIND="0.0.0.0" \
         --mount "type=bind,src=$project_dir/$service_handler/src,dst=/build/src,readonly" \
         --name "$container_name" \
         "$image_name" > /dev/null
@@ -413,7 +411,7 @@ for service_json_obj in "$@"; do
         --network chillboxnet \
         --env-file "$site_env_vars_file" \
         --env-file "$tmp_service_env_vars_file" \
-        -e HOST="localhost" \
+        -e HOST="0.0.0.0" \
         --mount "type=volume,src=$container_name,dst=/var/lib/chill/sqlite3" \
         --mount "type=bind,src=$project_dir/$service_handler/documents,dst=/home/chill/app/documents" \
         --mount "type=bind,src=$project_dir/$service_handler/queries,dst=/home/chill/app/queries" \
