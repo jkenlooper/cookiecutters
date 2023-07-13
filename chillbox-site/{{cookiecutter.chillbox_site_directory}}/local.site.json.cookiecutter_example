@@ -251,12 +251,12 @@
     {
       "name": "design-tokens",
       "lang": "immutable",
-      "handler": "design-tokens",
+      "handler": "design-tokens"
     },
     {
       "name": "client-side-public",
       "lang": "immutable",
-      "handler": "client-side-public",
+      "handler": "client-side-public"
     },
     {
       "name": "source-media",
