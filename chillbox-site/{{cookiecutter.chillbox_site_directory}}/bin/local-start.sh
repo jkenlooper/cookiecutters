@@ -413,6 +413,9 @@ for service_json_obj in "$@"; do
         --env-file "$tmp_service_env_vars_file" \
         -e HOST="0.0.0.0" \
         --mount "type=volume,src=$container_name,dst=/var/lib/chill/sqlite3" \
+        --mount "type=bind,src=$project_dir/$service_handler/chill-data.yaml,dst=/home/chill/app/chill-data.yaml" \
+        --mount "type=bind,src=$project_dir/$service_handler/chill-dump.sql,dst=/home/chill/app/chill-dump.sql" \
+        --mount "type=bind,src=$project_dir/$service_handler/site.cfg,dst=/home/chill/app/site.cfg" \
         --mount "type=bind,src=$project_dir/$service_handler/documents,dst=/home/chill/app/documents" \
         --mount "type=bind,src=$project_dir/$service_handler/queries,dst=/home/chill/app/queries" \
         --mount "type=bind,src=$project_dir/$service_handler/templates,dst=/home/chill/app/templates" \

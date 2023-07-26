@@ -168,7 +168,7 @@ PIP_INSTALL_SRC
 
 ENV SECRETS_CONFIG=""
 
-ENV CLIENT_SIDE_PUBLIC_PORT={{ cookiecutter.project_port }}
+ENV PORT={{ cookiecutter.project_port }}
 ENV BIND=0.0.0.0
 
 RUN <<FILEWATCH_SUPPORT
