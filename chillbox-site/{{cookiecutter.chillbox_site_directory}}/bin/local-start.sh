@@ -349,11 +349,12 @@ for service_json_obj in "$@"; do
         --name "$container_name" \
         --env-file "$site_env_vars_file" \
         --env-file "$tmp_service_env_vars_file" \
-        -e BIND="0.0.0.0:$PORT" \
+        -e BIND="0.0.0.0" \
+        -e PORT="$PORT" \
         -e SECRETS_CONFIG="/var/lib/local-secrets/$slugname/$service_handler/$secrets_config" \
         --network chillboxnet \
         --mount "type=volume,src=chillbox-local-shared,dst=/var/lib/chillbox-local-shared,readonly=true" \
-        --mount "type=bind,src=$project_dir/$service_handler/src/${slugname}_${service_handler},dst=/usr/local/src/app/src/${slugname}_${service_handler},readonly" \
+        --mount "type=bind,src=$project_dir/$service_handler/src/${slugname}_${service_handler},dst=/home/dev/app/src/${slugname}_${service_handler},readonly" \
         --mount "type=bind,src=$not_encrypted_secrets_dir/$service_handler/$secrets_config,dst=/var/lib/local-secrets/$slugname/$service_handler/$secrets_config,readonly" \
         "$image_name" > /dev/null
 
@@ -385,11 +386,12 @@ for service_json_obj in "$@"; do
             --user root \
             --env-file "$site_env_vars_file" \
             --env-file "$tmp_service_env_vars_file" \
-            -e BIND="0.0.0.0:$PORT" \
+            -e BIND="0.0.0.0" \
+            -e PORT="$PORT" \
             -e SECRETS_CONFIG="/var/lib/local-secrets/$slugname/$service_handler/$secrets_config" \
             --network chillboxnet \
             --mount "type=volume,src=chillbox-local-shared,dst=/var/lib/chillbox-local-shared,readonly=true" \
-            --mount "type=bind,src=$project_dir/$service_handler/src/${slugname}_${service_handler},dst=/usr/local/src/app/src/${slugname}_${service_handler},readonly" \
+            --mount "type=bind,src=$project_dir/$service_handler/src/${slugname}_${service_handler},dst=/home/dev/app/src/${slugname}_${service_handler},readonly" \
             --mount "type=bind,src=$not_encrypted_secrets_dir/$service_handler/$secrets_config,dst=/var/lib/local-secrets/$slugname/$service_handler/$secrets_config,readonly" \
             "$image_name" ./sleep.sh > /dev/null
           echo "Running the $container_name container with root user and sleep process to keep it started."

@@ -169,7 +169,9 @@ PIP_INSTALL_SRC
 ENV SECRETS_CONFIG=""
 
 ENV PORT={{ cookiecutter.project_port }}
+# Setting bind to 0.0.0.0 (externally visible) to work with docker network.
 ENV BIND=0.0.0.0
+ENV ASGI=no
 
 RUN <<FILEWATCH_SUPPORT
 # Create scripts for file watching.
@@ -196,13 +198,13 @@ set -o errexit
 # Override any existing VIRTUAL_ENV_BIN here when running this locally.
 export VIRTUAL_ENV_BIN="${VIRTUAL_ENV}/bin"
 
-# Setting bind to 0.0.0.0 (externally visible) to work with docker network.
-# The gunicorn command will use gunicorn.conf.py if it is in the same directory
-# by default. Setting it explicitly here to help show how it is being used.
-# The GUNICORN_CMD_ARGS will also be applied here if they are set. See gunicorn
-# documentation on how these configurations are applied.
-# https://docs.gunicorn.org/en/stable/settings.html
-gunicorn \
+if [ "$ASGI" = "no" ]; then
+  # The gunicorn command will use gunicorn.conf.py if it is in the same directory
+  # by default. Setting it explicitly here to help show how it is being used.
+  # The GUNICORN_CMD_ARGS will also be applied here if they are set. See gunicorn
+  # documentation on how these configurations are applied.
+  # https://docs.gunicorn.org/en/stable/settings.html
+  gunicorn \
     --config ./gunicorn.conf.py \
     --chdir /home/dev/app \
     --reload \
@@ -210,6 +212,21 @@ gunicorn \
     --access-logfile - \
     --bind "$BIND:$PORT" \
     "{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}.app:create_app()"
+
+else
+  # Use uvicorn directly like this when developing an ASGI app and needing to
+  # have the reloader work correctly. In production it would use gunicorn with
+  # the uvicorn worker set in gunicorn.conf.py:
+  # worker_class="uvicorn.workers.UvicornWorker"
+  uvicorn \
+    --factory \
+    --host "$BIND" \
+    --port "$PORT" \
+    --log-level debug \
+    --reload \
+    "{{ cookiecutter.slugname }}_{{ cookiecutter.project_slug }}.app:create_app"
+
+fi
 
 RELOADER_SH
 
