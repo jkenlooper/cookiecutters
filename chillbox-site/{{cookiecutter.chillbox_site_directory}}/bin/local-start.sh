@@ -174,6 +174,10 @@ stop_and_rm_containers_silently "$slugname" "$project_name_hash" "$site_json_fil
 
 "$script_dir/local-s3.sh"
 
+# Run a local ZITADEL instance for supporting OAuth2.0 in apps.
+# https://zitadel.com/
+"$script_dir/local-zitadel.sh"
+
 has_redis="$(jq -r -e 'has("redis")' "$site_json_file" || printf "false")"
 if [ "$has_redis" = "true" ]; then
   "$script_dir/local-redis.sh" -s "$slugname" "$site_json_file"
