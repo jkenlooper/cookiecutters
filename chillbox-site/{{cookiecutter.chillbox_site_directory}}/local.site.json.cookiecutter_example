@@ -212,6 +212,38 @@
       "cmd": "make --silent --directory=source-media/ --no-print-directory inspect.HASH"
     },
     {
+      "name": "DEBUG",
+      "value": "True"
+    },
+    {
+      "name": "OAUTH2_ISSUER_URL",
+      "value": "http://chillbox-zitadel:37837"
+    },
+    {
+      "name": "OAUTH2_TOKEN_URL",
+      "value": "http://chillbox-zitadel:37837/oauth/v2/token"
+    },
+    {
+      "name": "OAUTH2_AUTHORIZE_URL",
+      "value": "http://chillbox-zitadel:37837/oauth/v2/authorize"
+    },
+    {
+      "name": "OAUTH2_INTROSPECTION_URL",
+      "value": "http://chillbox-zitadel:37837/oauth/v2/introspect"
+    },
+    {
+      "name": "OAUTH2_REVOCATION_URL",
+      "value": "http://chillbox-zitadel:37837/oauth/v2/revoke"
+    },
+    {
+      "name": "OAUTH2_REDIRECT_URL",
+      "value": "http://localhost:{{ cookiecutter.local_app_port }}/oauth2/callback"
+    },
+    {
+      "name": "OAUTH2_POST_LOGOUT_URL",
+      "value": "http://localhost:{{ cookiecutter.local_app_port }}/"
+    },
+    {
       "name": "PROXY_CACHE_VALID__chillbox",
       "value": "1y"
     },

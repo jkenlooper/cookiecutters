@@ -28,6 +28,9 @@ Usage:
 Options:
   -h                  Show this help message.
 
+Subcommands:
+  destroy             Delete chillbox-zitadel and chillbox-cockroachdb containers and destroy the associated data volume.
+
 Environment:
   ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME  Default is 'root'
   ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD  Default is 'RootPassword1!'
