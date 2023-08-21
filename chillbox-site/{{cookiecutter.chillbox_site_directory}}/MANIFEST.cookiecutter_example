@@ -1,8 +1,0 @@
-MANIFEST
-Makefile
-README.md
-VERSION
-bin
-local.site.json
-nginx
-redis

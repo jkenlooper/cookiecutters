@@ -1,8 +1,0 @@
-MANIFEST.in
-README.md
-dep
-pyproject.toml
-requirements.txt
-secrets.Dockerfile
-secrets.sh
-src

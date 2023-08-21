@@ -1,4 +1,0 @@
-# graft src/{{cookiecutter.slugname}}_{{cookiecutter.project_slug}}/queries
-# graft src/{{cookiecutter.slugname}}_{{cookiecutter.project_slug}}/templates
-
-global-exclude *.pyc

@@ -1,7 +1,0 @@
-# {{ cookiecutter.template_file_comment }}
-# Version: {{ cookiecutter._version }}
-
-/.dist-*
-/dist/*
-!/dist/.gitkeep
-/.vendor

@@ -1,6 +1,0 @@
-*
-!/default.nginx.conf
-!/nginx.conf
-!/{{cookiecutter.slugname}}.ssl_cert.include
-!/root/*
-!/templates/*

@@ -1,8 +1,0 @@
-README.md
-requirements.txt
-setup.py
-dep
-src
-secrets.sh
-secrets.Dockerfile
-gunicorn.conf.py

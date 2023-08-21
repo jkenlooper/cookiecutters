@@ -1,6 +1,0 @@
-# Chillbox replaces this file. This is only a placeholder.
-listen {{ cookiecutter.local_app_port }};
-
-## listen 443 ssl;
-## ssl_certificate /etc/letsencrypt/live/{{ cookiecutter.slugname }}/fullchain.pem;
-## ssl_certificate_key /etc/letsencrypt/live/{{ cookiecutter.slugname }}/privkey.pem;

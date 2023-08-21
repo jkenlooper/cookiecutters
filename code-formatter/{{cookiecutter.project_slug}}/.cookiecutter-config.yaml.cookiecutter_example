@@ -1,4 +1,0 @@
-default_context:
-  slugname: "{{ cookiecutter.slugname }}"
-  targets: "{{ cookiecutter.targets }}"
-  code_formatter_directory: "{{ cookiecutter.code_formatter_directory }}"

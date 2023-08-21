@@ -1,9 +1,0 @@
-MANIFEST.in
-README.md
-dep
-gunicorn.conf.py
-pyproject.toml
-requirements.txt
-secrets.Dockerfile
-secrets.sh
-src
